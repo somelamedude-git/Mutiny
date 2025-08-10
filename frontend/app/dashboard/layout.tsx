@@ -13,16 +13,16 @@ import { Suspense } from "react"
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="min-h-screen bg-[#0a0a0c]">
+    <div className="min-h-screen bg-[#0a0a0c]" style={{ backgroundColor: '#0a0a0c' }}>
       <SidebarProvider>
         <AppDashboardSidebar />
-        <SidebarInset className="bg-[#0a0a0c] text-white">
+        <SidebarInset className="bg-[#0a0a0c] text-white" style={{ backgroundColor: '#0a0a0c' }}>
           <Suspense fallback={<div>Loading...</div>}>
             <header className="flex h-14 shrink-0 items-center gap-2 border-b border-white/10 px-4 bg-[#0a0a0c]">
               <SidebarTrigger className="-ml-1 text-white/80 hover:text-white" />
               <Separator orientation="vertical" className="mr-2 h-5 bg-white/10" />
               <div className="flex items-center gap-3">
-                <Link href="/dashboard" className="text-sm sm:text-base font-semibold tracking-tight">
+                <Link href="/dashboard" className="text-sm sm:text-base font-semibold tracking-tight text-white">
                   Overview
                 </Link>
                 <span className="text-white/40">/</span>

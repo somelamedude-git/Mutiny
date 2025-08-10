@@ -41,37 +41,37 @@
 }
 
 .dark {
-  --background: oklch(0.145 0 0);
+  --background: oklch(0.07 0 0); /* Changed from 0.145 to darker for #0A0A0C */
   --foreground: oklch(0.985 0 0);
-  --card: oklch(0.145 0 0);
+  --card: oklch(0.07 0 0); /* Changed to match background */
   --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.145 0 0);
+  --popover: oklch(0.07 0 0); /* Changed to match background */
   --popover-foreground: oklch(0.985 0 0);
   --primary: oklch(0.985 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
+  --primary-foreground: oklch(0.07 0 0); /* Changed to match new background */
+  --secondary: oklch(0.15 0 0); /* Darker secondary */
   --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
+  --muted: oklch(0.15 0 0); /* Darker muted */
   --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
+  --accent: oklch(0.15 0 0); /* Darker accent */
   --accent-foreground: oklch(0.985 0 0);
   --destructive: oklch(0.396 0.141 25.723);
   --destructive-foreground: oklch(0.637 0.237 25.331);
-  --border: oklch(0.269 0 0);
-  --input: oklch(0.269 0 0);
+  --border: oklch(0.15 0 0); /* Darker border */
+  --input: oklch(0.15 0 0); /* Darker input */
   --ring: oklch(0.439 0 0);
   --chart-1: oklch(0.488 0.243 264.376);
   --chart-2: oklch(0.696 0.17 162.48);
   --chart-3: oklch(0.769 0.188 70.08);
   --chart-4: oklch(0.627 0.265 303.9);
   --chart-5: oklch(0.645 0.246 16.439);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
+  --sidebar: oklch(0.07 0 0); /* Dark sidebar background */
+  --sidebar-foreground: oklch(0.985 0 0); /* Light sidebar text */
   --sidebar-primary: oklch(0.488 0.243 264.376);
   --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
+  --sidebar-accent: oklch(0.15 0 0);
   --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(0.269 0 0);
+  --sidebar-border: oklch(0.15 0 0);
   --sidebar-ring: oklch(0.439 0 0);
 }
 
@@ -123,7 +123,12 @@
   }
 }
 
-/* Global canvas color and top-level wrapper normalization */
+/* Force dark mode and correct background color */
+html {
+  color-scheme: dark !important;
+  background-color: #0a0a0c !important;
+}
+
 html,
 body {
   background-color: #0a0a0c !important;
@@ -132,15 +137,22 @@ body {
   padding: 0;
 }
 
-/* Make sure the top-most app wrapper is flat (no rounded corners) and matches the canvas */
+/* Ensure all top-level containers have the correct background */
 #__next,
 #root,
 body > div:first-child,
-body > main:first-of-type {
+body > main:first-of-type,
+[data-nextjs-scroll-focus-boundary] {
   background-color: #0a0a0c !important;
   border-radius: 0 !important;
-  margin: 0 !important;
   padding: 0 !important;
+  margin: 0 !important;
+  min-height: 100vh !important;
+}
+
+/* Fix for Next.js app wrapper */
+body > div {
+  background-color: #0a0a0c !important;
 }
 
 /* Ensure headers/nav don't introduce a lighter strip */
@@ -149,49 +161,32 @@ nav {
   background-color: transparent !important;
 }
 
-/* Force all layout wrappers to use dark background */
-.layout-wrapper,
-[data-layout],
+/* Fix for any wrapper divs that might have padding/margins */
+.page-wrapper,
+.app-wrapper,
 main {
   background-color: #0a0a0c !important;
+  padding: 0 !important;
+  margin: 0 !important;
 }
 
-/* Fix for SidebarProvider and related components */
+/* Force sidebar components to use dark theme */
 [data-sidebar] {
   background-color: #0a0a0c !important;
-}
-
-/* Force menu/dropdown backgrounds to be dark with proper contrast */
-[role="menu"],
-[role="menubar"],
-[role="menuitem"],
-.menu,
-.dropdown-menu,
-[data-radix-menu-content],
-[data-radix-dropdown-menu-content] {
-  background-color: #0a0a0c !important;
-  color: white !important;
-  border-color: rgba(255, 255, 255, 0.1) !important;
-}
-
-/* Fix white menu items */
-[role="menuitem"] * {
   color: white !important;
 }
 
-/* Remove any unwanted borders or padding on root elements */
-#__next > *,
-body > div:first-child > * {
-  border-radius: 0 !important;
-}
-
-/* Ensure all sidebar components use dark theme */
-.sidebar,
-[data-sidebar="sidebar"] {
+/* Override any light theme remnants */
+.sidebar {
   background-color: #0a0a0c !important;
+  color: white !important;
 }
 
-/* Fix any remaining white backgrounds in layout */
-.bg-background {
+.sidebar * {
+  color: white !important;
+}
+
+/* Ensure the entire viewport is dark */
+:root {
   background-color: #0a0a0c !important;
 }
