@@ -123,21 +123,13 @@
   }
 }
 
-html,
-body {
-  background-color: #0a0a0c !important;
-  height: 100%;
-}
-
-body {
-  margin: 0;
-}
-
 /* Global canvas color and top-level wrapper normalization */
 html,
 body {
   background-color: #0a0a0c !important;
   height: 100%;
+  margin: 0;
+  padding: 0;
 }
 
 /* Make sure the top-most app wrapper is flat (no rounded corners) and matches the canvas */
@@ -147,10 +139,59 @@ body > div:first-child,
 body > main:first-of-type {
   background-color: #0a0a0c !important;
   border-radius: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
 }
 
-/* Ensure headers/nav don’t introduce a lighter strip */
+/* Ensure headers/nav don't introduce a lighter strip */
 header,
 nav {
   background-color: transparent !important;
+}
+
+/* Force all layout wrappers to use dark background */
+.layout-wrapper,
+[data-layout],
+main {
+  background-color: #0a0a0c !important;
+}
+
+/* Fix for SidebarProvider and related components */
+[data-sidebar] {
+  background-color: #0a0a0c !important;
+}
+
+/* Force menu/dropdown backgrounds to be dark with proper contrast */
+[role="menu"],
+[role="menubar"],
+[role="menuitem"],
+.menu,
+.dropdown-menu,
+[data-radix-menu-content],
+[data-radix-dropdown-menu-content] {
+  background-color: #0a0a0c !important;
+  color: white !important;
+  border-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+/* Fix white menu items */
+[role="menuitem"] * {
+  color: white !important;
+}
+
+/* Remove any unwanted borders or padding on root elements */
+#__next > *,
+body > div:first-child > * {
+  border-radius: 0 !important;
+}
+
+/* Ensure all sidebar components use dark theme */
+.sidebar,
+[data-sidebar="sidebar"] {
+  background-color: #0a0a0c !important;
+}
+
+/* Fix any remaining white backgrounds in layout */
+.bg-background {
+  background-color: #0a0a0c !important;
 }
