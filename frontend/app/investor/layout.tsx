@@ -24,16 +24,17 @@ export default function InvestorLayout({ children }: { children: React.ReactNode
         <AppInvestorSidebar />
         <SidebarInset className="bg-[#0a0a0c] text-white">
           <Suspense fallback={<div className="p-4">Loading...</div>}>
-            <header className="flex h-14 shrink-0 items-center gap-2 border-b border-[#1a1b1e] px-4 bg-[#0a0a0c]">
+            <header className="flex h-14 shrink-0 items-center gap-2 border-b border-[#1a1b1e] px-4 bg-[#0a0a0c] py-10">
               <SidebarTrigger className="-ml-1 text-white/80 hover:text-white" />
               <Separator orientation="vertical" className="mr-2 h-5 bg-[#1a1b1e]" />
-              <nav className="flex items-center gap-2 sm:gap-3">
+              <nav className="flex items-center gap-2 sm:gap-3 my-5">
                 <Link href="/investor" className="text-sm sm:text-base font-semibold tracking-tight">
                   Investor
                 </Link>
                 <span className="text-white/40">/</span>
                 <span className="text-white/70 text-sm">{section}</span>
               </nav>
+
               <div className="ml-auto flex items-center gap-2 sm:gap-3">
                 <div className="relative hidden md:block">
                   <Search className="pointer-events-none absolute left-2 top-1/2 z-10 h-4 w-4 -translate-y-1/2 text-white/40" />
@@ -60,7 +61,7 @@ export default function InvestorLayout({ children }: { children: React.ReactNode
               </div>
             </header>
           </Suspense>
-          <div className="flex-1 p-4 sm:p-6 bg-[#0a0a0c]">{children}</div>
+          <div className="flex-1 p-6 sm:p-8 lg:p-10 bg-[#0a0a0c]">{children}</div>
         </SidebarInset>
       </SidebarProvider>
     </div>

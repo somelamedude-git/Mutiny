@@ -181,7 +181,8 @@ export default function InvestorChatsPage() {
                 id="category"
                 value={category}
                 onChange={(e) => setCategory(e.target.value as Category)}
-                className="h-9 rounded-md bg-[#0f1012] border-transparent px-2 text-sm text-white"
+                className="[appearance:auto] [all:unset] block h-9 rounded-md bg-[#0f1012] px-2 text-sm text-white"
+
                 aria-label="Filter"
               >
                 <option value="all">All</option>
@@ -268,7 +269,7 @@ export default function InvestorChatsPage() {
               )}
             </div>
 
-            <div ref={listRef} className="flex h-[58vh] min-h-[380px] flex-col gap-6 overflow-y-auto px-3 py-4 sm:px-4">
+            <div ref={listRef} className="flex h-10/12 min-h-[380px] flex-col gap-6 overflow-hidden px-3 py-4 sm:px-4">
               {!activeThread && (
                 <div className="grid h-full place-items-center text-sm text-white/60">
                   Choose a thread to view messages.

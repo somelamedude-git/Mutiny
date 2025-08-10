@@ -39,7 +39,7 @@ export function AppInvestorSidebar() {
           <SidebarMenuItem>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <SidebarMenuButton className="justify-between">
+                <SidebarMenuButton className="justify-between h-14">
                   <div className="flex items-center gap-2">
                     <div className="h-5 w-5 rounded-sm bg-gradient-to-br from-white/70 to-white/30" />
                     <span>Mutiny • Investor</span>
