@@ -7,10 +7,24 @@ import { FooterAvant } from "@/components/footer-avant"
 
 export default function Page() {
   return (
+
+    
+
+    // Move To Next Page 
+
+
+
     <main className="min-h-screen bg-[#0a0a0c] text-white">
       <div>
         <a href="/investor">lmao</a>
       </div>
+
+      
+
+      {/* Nothing */}
+
+
+      
       <div
         aria-hidden="true"
         className="fixed inset-0 -z-30 opacity-40"
@@ -19,6 +33,7 @@ export default function Page() {
             "radial-gradient(1200px 600px at 10% 20%, rgba(234,191,95,0.06), transparent 65%), radial-gradient(900px 600px at 90% 15%, rgba(248,113,113,0.06), transparent 60%), radial-gradient(600px 600px at 50% 100%, rgba(52,211,153,0.07), transparent 60%)",
         }}
       />
+
       <div
         aria-hidden="true"
         className="fixed inset-0 -z-40"
@@ -29,8 +44,29 @@ export default function Page() {
         }}
       />
 
+
+
+      {/* Menu */}
+
+
+
       <NavAvant />
+
+
+
+      {/*Main Header
+      Contains Animation
+      Provide your mail */}
+
+
+
       <HeroConstellation />
+
+
+
+      {/*Middle Body*/}
+
+
 
       <section className="mx-auto max-w-6xl px-6 sm:px-8 py-10 sm:py-16">
         <div className="rounded-xl border border-white/10 bg-white/[0.02] p-4 sm:p-6">
@@ -42,17 +78,41 @@ export default function Page() {
         </div>
       </section>
 
+
+
+      {/* Filters */}
+
+
+
       <section className="mx-auto max-w-6xl px-6 sm:px-8 py-10 sm:py-16">
         <MatchCabinet />
       </section>
+
+
+
+      {/*AI*/}
+
+
 
       <section className="mx-auto max-w-6xl px-6 sm:px-8 py-10 sm:py-16">
         <DuoSynth />
       </section>
 
+
+
+      {/* Community Funding */}
+
+
+
       <section className="mx-auto max-w-6xl px-6 sm:px-8 py-10 sm:py-16">
         <FundingOrbit />
       </section>
+
+
+
+      {/* Footer */}
+
+
 
       <FooterAvant />
     </main>

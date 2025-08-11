@@ -2,6 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { ConciergeRail } from "@/components/concierge-rail"
 import { Search, ArrowUpRight } from "lucide-react"
+import Link from 'next/link';
 
 export default function InvestorOverviewPage() {
   return (
@@ -57,10 +58,7 @@ export default function InvestorOverviewPage() {
                     </span>
                   ))}
                 </div>
-                <Button className="mt-1 w-full bg-white text-[#0b0b0c] hover:bg-white/90">
-                  <ArrowUpRight className="mr-2 h-4 w-4" />
-                  Advanced filters
-                </Button>
+                
               </CardContent>
             </Card>
           </div>
@@ -109,12 +107,18 @@ function PageHeader() {
             Clean, minimal, precise. Your capital and conversations at a glance.
           </p>
         </div>
-        <div className="sm:ml-auto flex items-center gap-2">
-          <Button className="rounded-md bg-white text-[#0b0b0c] hover:bg-white/90">
-            <Search className="mr-2 h-4 w-4" />
-            Discover
-          </Button>
-        </div>
+        
+<div className="sm:ml-auto flex items-center gap-2">
+  <Link href="/search" passHref>
+    <button
+      className="rounded-md bg-white text-[#0b0b0c] hover:bg-white/90 flex items-center px-3 py-2"
+      type="button"
+    >
+      <Search className="mr-2 h-4 w-4" />
+      Discover
+    </button>
+  </Link>
+</div>
       </div>
     </div>
   )

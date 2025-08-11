@@ -5,9 +5,23 @@ import { Button } from "@/components/ui/button"
 import { Sparkles, Infinity } from "lucide-react"
 import { useState } from "react"
 import { cn } from "@/lib/utils"
+import axios from "axios"
+import { useRouter } from "next/navigation" // ✅ Next.js way
 
 export function NavAvant() {
   const [open, setOpen] = useState(false)
+  const router = useRouter()
+
+  const handleEarlyAccess = async () => {
+    try {
+      const res = await axios.post("#", { email: "test@example.com" })
+      console.log("POST success:", res.data)
+
+      router.push("/waitlist") // ✅ Next.js navigation
+    } catch (error) {
+      console.error("POST failed:", error)
+    }
+  }
 
   return (
     <header className="sticky top-0 z-40">
@@ -15,7 +29,6 @@ export function NavAvant() {
         <div className="mt-4 mb-3 flex items-center justify-between rounded-full border border-white/10 bg-black/30 backdrop-blur supports-[backdrop-filter]:bg-black/30 px-3 py-2">
           <Link href="#" className="flex items-center gap-2" aria-label="Mutiny home">
             <div className="relative h-8 w-8">
-              {/* Sigil */}
               <div
                 className="absolute inset-0 rounded-full"
                 style={{
@@ -44,17 +57,16 @@ export function NavAvant() {
             <a href="#funding" className="text-sm text-white/80 hover:text-white transition-colors">
               Funding
             </a>
-            <a href="#waitlist">
-              <Button
-                className={cn(
-                  "rounded-full bg-white text-black hover:bg-[#e3c27a] hover:text-black",
-                  "shadow-[0_0_0_1px_rgba(255,255,255,0.16)_inset,0_12px_50px_rgba(227,194,122,0.24)]",
-                )}
-              >
-                <Sparkles className="h-4 w-4 mr-2" />
-                Early access
-              </Button>
-            </a>
+            <Button
+              onClick={handleEarlyAccess}
+              className={cn(
+                "rounded-full bg-white text-black hover:bg-[#e3c27a] hover:text-black",
+                "shadow-[0_0_0_1px_rgba(255,255,255,0.16)_inset,0_12px_50px_rgba(227,194,122,0.24)]",
+              )}
+            >
+              <Sparkles className="h-4 w-4 mr-2" />
+              Early access
+            </Button>
           </nav>
 
           <button
@@ -80,9 +92,12 @@ export function NavAvant() {
             <a href="#funding" className="text-sm text-white/90">
               Funding
             </a>
-            <a href="#waitlist" className="text-sm text-black">
-              <Button className="w-full rounded-full bg-white text-black hover:bg-[#e3c27a]">Early access</Button>
-            </a>
+            <Button
+              onClick={handleEarlyAccess}
+              className="w-full rounded-full bg-white text-black hover:bg-[#e3c27a]"
+            >
+              Early access
+            </Button>
           </div>
         </div>
       )}

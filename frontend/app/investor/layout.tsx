@@ -19,9 +19,23 @@ export default function InvestorLayout({ children }: { children: React.ReactNode
     { search: "Search", investments: "Investments", chats: "Chats", profile: "Profile" }[seg ?? ""] ?? "Overview"
 
   return (
+
+
+    
+    // Side Menu for investors Page
+
+
+
     <div className="min-h-screen bg-[#0a0a0c]">
       <SidebarProvider>
         <AppInvestorSidebar />
+
+
+
+        {/* Header for all investors  */}
+
+
+
         <SidebarInset className="bg-[#0a0a0c] text-white">
           <Suspense fallback={<div className="p-4">Loading...</div>}>
             <header className="flex h-14 shrink-0 items-center gap-2 border-b border-[#1a1b1e] px-4 bg-[#0a0a0c] py-10">
