@@ -67,7 +67,7 @@ export function AppInvestorSidebar() {
                 return (
                   <SidebarMenuItem key={item.title}>
                     <SidebarMenuButton asChild isActive={active} tooltip={item.title}>
-                      <Link href={item.url}>
+                      <Link href={item.url} prefetch>
                         <item.icon />
                         <span>{item.title}</span>
                       </Link>
