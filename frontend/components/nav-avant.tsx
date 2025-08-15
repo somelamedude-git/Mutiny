@@ -7,6 +7,7 @@ import { useState } from "react"
 import { cn } from "@/lib/utils"
 import axios from "axios"
 import { useRouter } from "next/navigation" // ✅ Next.js way
+import { WaveLogo } from "./mutiny-logo"
 
 export function NavAvant() {
   const [open, setOpen] = useState(false)
@@ -28,23 +29,7 @@ export function NavAvant() {
       <div className="mx-auto max-w-6xl px-6 sm:px-8">
         <div className="mt-4 mb-3 flex items-center justify-between rounded-full border border-white/10 bg-black/30 backdrop-blur supports-[backdrop-filter]:bg-black/30 px-3 py-2">
           <Link href="#" className="flex items-center gap-2" aria-label="Mutiny home">
-            <div className="relative h-8 w-8">
-              <div
-                className="absolute inset-0 rounded-full"
-                style={{
-                  background: "conic-gradient(from 210deg, #e3c27a, #34d399 35%, #f472b6 60%, #e3c27a 100%)",
-                  filter: "blur(6px)",
-                  opacity: 0.6,
-                }}
-                aria-hidden="true"
-              />
-              <div className="absolute inset-0 rounded-full ring-1 ring-white/30 bg-black/60" />
-              <div className="absolute inset-[3px] rounded-full bg-gradient-to-br from-white/10 to-black/60" />
-            </div>
-            <div className="leading-tight">
-              <div className="text-base font-semibold tracking-[0.04em]">Mutiny</div>
-              <div className="text-[10px] uppercase tracking-[0.3em] text-white/60">{"Mut • Iny"}</div>
-            </div>
+       <WaveLogo/>
           </Link>
 
           <nav className="hidden md:flex items-center gap-6">
