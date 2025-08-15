@@ -33,13 +33,13 @@ export function NavAvant() {
           </Link>
 
           <nav className="hidden md:flex items-center gap-6">
-            <Link scroll={false} href="#match" className="text-sm text-white/80 hover:text-white transition-colors">
+            <Link href="#match" className="text-sm text-white/80 hover:text-white transition-colors">
               Align
             </Link>
-            <Link scroll={false} href="#duo" className="text-sm text-white/80 hover:text-white transition-colors">
+            <Link href="#duo" className="text-sm text-white/80 hover:text-white transition-colors">
               Duo
             </Link>
-            <Link scroll={false} href="#funding" className="text-sm text-white/80 hover:text-white transition-colors">
+            <Link href="#funding" className="text-sm text-white/80 hover:text-white transition-colors">
               Funding
             </Link>
             <Button
