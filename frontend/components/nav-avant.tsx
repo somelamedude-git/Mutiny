@@ -33,15 +33,15 @@ export function NavAvant() {
           </Link>
 
           <nav className="hidden md:flex items-center gap-6">
-            <a href="#match" className="text-sm text-white/80 hover:text-white transition-colors">
+            <Link scroll={false} href="#match" className="text-sm text-white/80 hover:text-white transition-colors">
               Align
-            </a>
-            <a href="#duo" className="text-sm text-white/80 hover:text-white transition-colors">
+            </Link>
+            <Link scroll={false} href="#duo" className="text-sm text-white/80 hover:text-white transition-colors">
               Duo
-            </a>
-            <a href="#funding" className="text-sm text-white/80 hover:text-white transition-colors">
+            </Link>
+            <Link scroll={false} href="#funding" className="text-sm text-white/80 hover:text-white transition-colors">
               Funding
-            </a>
+            </Link>
             <Button
               onClick={handleEarlyAccess}
               className={cn(
@@ -68,15 +68,15 @@ export function NavAvant() {
       {open && (
         <div className="md:hidden border-t border-white/10 bg-black/50 backdrop-blur">
           <div className="mx-auto max-w-6xl px-6 py-4 grid gap-3">
-            <a href="#match" className="text-sm text-white/90">
+            <Link scroll={false} href="#match" className="text-sm text-white/90">
               Align
-            </a>
-            <a href="#duo" className="text-sm text-white/90">
+            </Link>
+            <Link scroll={false}  href="#duo" className="text-sm text-white/90">
               Duo
-            </a>
-            <a href="#funding" className="text-sm text-white/90">
+            </Link>
+            <Link scroll={false}  href="#funding" className="text-sm text-white/90">
               Funding
-            </a>
+            </Link>
             <Button
               onClick={handleEarlyAccess}
               className="w-full rounded-full bg-white text-black hover:bg-[#e3c27a]"

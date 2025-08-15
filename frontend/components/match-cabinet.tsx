@@ -1,30 +1,62 @@
 "use client"
-
 import { cn } from "@/lib/utils"
 import { useState } from "react"
 
 const seeds = [
   "Climate hardware",
-  "Open firmware",
+  "Open firmware", 
   "Neurotech",
   "Bio tooling",
   "Creator infra",
   "Local-first",
   "Edge AI",
-  "Robotics",
+  "Robotics", 
   "Public goods",
   "Privacy",
   "Alt education",
   "DePIN",
 ]
 
+const matchTypes = [
+  {
+    label: "Co-founder",
+    title: "Perfect founder complement",
+    description: "Mut looks for viability overlap, Iny for people‐fit. Your active tags bias the match."
+  },
+  {
+    label: "Team",
+    title: "Early team members",
+    description: "Find technical co-founders and key hires who share your vision and complement your skills."
+  },
+  {
+    label: "Stealth",
+    title: "Stealth startup opportunities", 
+    description: "Get matched with promising pre-launch companies building in your areas of interest."
+  },
+  {
+    label: "Investor",
+    title: "Aligned investor network",
+    description: "Connect with investors who actively fund projects in your selected focus areas."
+  },
+  {
+    label: "Advisor",
+    title: "Domain expert advisors",
+    description: "Access seasoned operators and technical experts in your chosen verticals."
+  },
+  {
+    label: "Community",
+    title: "Builder communities",
+    description: "Join exclusive groups of founders and builders working on similar challenges."
+  }
+]
+
 export function MatchCabinet() {
   const [active, setActive] = useState<string[]>(["Climate hardware", "Edge AI", "Privacy"])
-
+  
   function toggle(tag: string) {
     setActive((prev) => (prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]))
   }
-
+  
   return (
     <section id="match">
       <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight">Idea alignment lab</h2>
@@ -32,7 +64,6 @@ export function MatchCabinet() {
         Pick your signals. We use them to match you with co-founders, teams, and stealth startups that share your
         convictions.
       </p>
-
       <div className="mt-6 rounded-2xl border border-white/10 bg-white/[0.02] p-4 sm:p-6">
         <div className="flex flex-wrap gap-2">
           {seeds.map((s) => {
@@ -67,9 +98,8 @@ export function MatchCabinet() {
             )
           })}
         </div>
-
         <div className="mt-6 grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {Array.from({ length: 6 }).map((_, i) => (
+          {matchTypes.map((match, i) => (
             <div key={i} className="relative overflow-hidden rounded-xl border border-white/10 bg-black/40 p-4 sm:p-5">
               <div
                 className="absolute -inset-1 opacity-20 blur-2xl"
@@ -79,10 +109,10 @@ export function MatchCabinet() {
                 }}
               />
               <div className="relative">
-                <div className="text-xs uppercase tracking-[0.25em] text-white/60">Signal</div>
-                <div className="mt-1 text-base font-semibold">Perfect founder complement</div>
+                <div className="text-xs uppercase tracking-[0.25em] text-white/60">{match.label}</div>
+                <div className="mt-1 text-base font-semibold">{match.title}</div>
                 <p className="text-white/70 text-sm mt-1">
-                  Mut looks for viability overlap, Iny for people‑fit. Your active tags bias the match.
+                  {match.description}
                 </p>
               </div>
             </div>

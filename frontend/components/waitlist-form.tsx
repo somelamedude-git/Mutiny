@@ -1,122 +1,125 @@
-"use client"
+import { useState } from "react";
+import axios from "axios";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { CheckCircle } from "lucide-react";
 
-import type React from "react"
-import { useState } from "react"
-import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
+// Allowed email domains (moved outside so it's not recreated each render)
+const allowedDomains = ["gmail.com", "yahoo.com", "outlook.com", "hotmail.com"];
 
-export function WaitlistForm() {
-  const [email, setEmail] = useState("")
-  const [submitted, setSubmitted] = useState(false)
-  const valid = /.+@.+/.test(email)
+// Email validation function (also moved outside)
+const validateEmail = (value) => {
+  const trimmed = value.trim();
+  const emailPattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+  if (!emailPattern.test(trimmed)) return false;
+  const domain = trimmed.split("@")[1]?.toLowerCase();
+  return allowedDomains.includes(domain);
+};
 
-  async function onSubmit(e: React.FormEvent) {
-    e.preventDefault()
-    if (!valid) return
-    await new Promise((r) => setTimeout(r, 500))
-    setSubmitted(true)
-  }
+export default function JoinForm() {
+  const [email, setEmail] = useState("");
+  const [valid, setValid] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
+  const [lastSubmit, setLastSubmit] = useState(0);
 
+  const onChangeEmail = (e) => {
+    const value = e.target.value;
+    setEmail(value);
+    setValid(validateEmail(value));
+    // Reset submitted state when user starts typing again
+    if (submitted) setSubmitted(false);
+  };
+
+  const onSubmit = async (e) => {
+    e.preventDefault();
+    if (!valid || loading) return;
+    
+    // Rate limiting - prevent rapid submissions
+    if (Date.now() - lastSubmit < 1000) return;
+    setLastSubmit(Date.now());
+
+    setLoading(true);
+    try {
+      const res = await axios.post("#", { email: email.trim() });
+      console.log("Email submitted:", res.data);
+      setEmail("");
+      setValid(false);
+      setSubmitted(true);
+      
+      // Auto-hide success message after 5 seconds
+      setTimeout(() => setSubmitted(false), 5000);
+    } catch (error) {
+      console.error("Failed to send email:", error);
+      
+      // More specific error messages with axios
+      const message = error.response?.status === 409 
+        ? "Email already registered!" 
+        : error.response?.status >= 500
+        ? "Server error. Please try again later."
+        : "Something went wrong. Please try again.";
+      alert(message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Success state with aesthetic animation
   if (submitted) {
     return (
-      <div
-        role="status"
-        aria-live="polite"
-        className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-3 py-2 text-sm text-emerald-200"
-      >
-        You&apos;re on the list. We&apos;ll reach out soon.
+      <div className="flex items-center gap-3 p-4 rounded-full bg-gradient-to-r from-green-500/20 to-emerald-500/20 border border-green-400/30 backdrop-blur-sm animate-in fade-in-0 slide-in-from-bottom-2 duration-500">
+        <div className="flex-shrink-0">
+          <CheckCircle className="w-5 h-5 text-green-400 animate-in zoom-in-0 duration-300 delay-100" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-green-100 font-medium text-sm">
+            Welcome aboard! 
+          </p>
+          <p className="text-green-200/70 text-xs">
+            Check your inbox for confirmation
+          </p>
+        </div>
+        <button
+          onClick={() => setSubmitted(false)}
+          className="flex-shrink-0 text-green-200/70 hover:text-green-100 transition-colors text-xs"
+        >
+          Join another?
+        </button>
       </div>
-    )
+    );
   }
 
   return (
-    <form onSubmit={onSubmit} className="flex gap-2">
+    <div onSubmit={onSubmit} className="flex gap-2">
       <label htmlFor="email" className="sr-only">
         Email
       </label>
-      <Input
-        id="email"
-        type="email"
-        placeholder="you@domain.com"
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-        className="rounded-full bg-black/30 border-white/15 text-white placeholder:text-white/40"
-        required
-      />
-      <Button type="submit" disabled={!valid} className="rounded-full bg-white text-black hover:bg-[#e3c27a]">
-        Join
+      <div className="relative flex-1">
+        <Input
+          id="email"
+          type="email"
+          placeholder="you@domain.com"
+          value={email}
+          onChange={onChangeEmail}
+          className="rounded-full bg-black/30 border-white/15 text-white placeholder:text-white/40 transition-all duration-200 focus:border-white/30 focus:bg-black/40"
+          required
+        />
+      </div>
+      <Button
+        type="submit"
+        onClick={onSubmit}
+        disabled={!valid || loading}
+        className="rounded-full bg-white text-black hover:bg-[#e3c27a] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed min-w-[80px]"
+      >
+        {loading ? (
+          <div className="flex items-center gap-2">
+            <div className="w-4 h-4 border-2 border-black/20 border-t-black animate-spin rounded-full" />
+            Joining...
+          </div>
+        ) : (
+          "Join"
+        )}
       </Button>
-    </form>
-  )
+    </div>
+  );
 }
-
-
-
-
-// Soft Code
-// import { useState } from "react";
-// import axios from "axios";
-// import { Input } from "@/components/ui/input";
-// import { Button } from "@/components/ui/button";
-
-// export default function JoinForm() {
-//   const [email, setEmail] = useState("");
-//   const [valid, setValid] = useState(false);
-
-//   // Allowed email domains
-//   const allowedDomains = ["gmail.com", "yahoo.com", "outlook.com", "hotmail.com"];
-
-//   const validateEmail = (value) => {
-//     // Basic email format check
-//     const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-//     if (!emailPattern.test(value)) return false;
-
-//     // Extract domain and check against allowed list
-//     const domain = value.split("@")[1]?.toLowerCase();
-//     return allowedDomains.includes(domain);
-//   };
-
-//   const onChangeEmail = (e) => {
-//     const value = e.target.value;
-//     setEmail(value);
-//     setValid(validateEmail(value));
-//   };
-
-//   const onSubmit = async (e) => {
-//     e.preventDefault();
-
-//     try {
-//       // Send POST request
-//       const res = await axios.post("#", { email });
-//       console.log("Email submitted:", res.data);
-
-//       // Optional: reset field after success
-//       setEmail("");
-//       setValid(false);
-//       alert("You have been added to the list!");
-//     } catch (error) {
-//       console.error("Failed to send email:", error);
-//       alert("Something went wrong. Please try again.");
-//     }
-//   };
-
-//   return (
-//     <form onSubmit={onSubmit} className="flex gap-2">
-//       <label htmlFor="email" className="sr-only">
-//         Email
-//       </label>
-//       <Input
-//         id="email"
-//         type="email"
-//         placeholder="you@domain.com"
-//         value={email}
-//         onChange={onChangeEmail}
-//         className="rounded-full bg-black/30 border-white/15 text-white placeholder:text-white/40"
-//         required
-//       />
-//       <Button type="submit" disabled={!valid} className="rounded-full bg-white text-black hover:bg-[#e3c27a]">
-//         Join
-//       </Button>
-//     </form>
-//   );
-// }
