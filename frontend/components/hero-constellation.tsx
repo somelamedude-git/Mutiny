@@ -3,7 +3,7 @@
 import type React from "react"
 
 import { Button } from "@/components/ui/button"
-import { WaitlistForm } from "./waitlist-form"
+import JoinForm from "./waitlist-form"
 import { useEffect, useRef, useState } from "react"
 import { cn } from "@/lib/utils"
 
@@ -41,8 +41,7 @@ export function HeroConstellation() {
             </div>
 
             <div id="waitlist" className="mt-8 max-w-md">
-              <WaitlistForm />
-              <p className="text-xs text-white/50 mt-2">
+              < JoinForm/> <p className="text-xs text-white/50 mt-2">
                 Mutual NDAs + on-chain idea hashes to prove authorship and deter copying.
               </p>
             </div>

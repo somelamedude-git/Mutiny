@@ -7,6 +7,7 @@ import { useState } from "react"
 import { cn } from "@/lib/utils"
 import axios from "axios"
 import { useRouter } from "next/navigation" // ✅ Next.js way
+import { WaveLogo } from "./mutiny-logo"
 
 export function NavAvant() {
   const [open, setOpen] = useState(false)
@@ -28,35 +29,19 @@ export function NavAvant() {
       <div className="mx-auto max-w-6xl px-6 sm:px-8">
         <div className="mt-4 mb-3 flex items-center justify-between rounded-full border border-white/10 bg-black/30 backdrop-blur supports-[backdrop-filter]:bg-black/30 px-3 py-2">
           <Link href="#" className="flex items-center gap-2" aria-label="Mutiny home">
-            <div className="relative h-8 w-8">
-              <div
-                className="absolute inset-0 rounded-full"
-                style={{
-                  background: "conic-gradient(from 210deg, #e3c27a, #34d399 35%, #f472b6 60%, #e3c27a 100%)",
-                  filter: "blur(6px)",
-                  opacity: 0.6,
-                }}
-                aria-hidden="true"
-              />
-              <div className="absolute inset-0 rounded-full ring-1 ring-white/30 bg-black/60" />
-              <div className="absolute inset-[3px] rounded-full bg-gradient-to-br from-white/10 to-black/60" />
-            </div>
-            <div className="leading-tight">
-              <div className="text-base font-semibold tracking-[0.04em]">Mutiny</div>
-              <div className="text-[10px] uppercase tracking-[0.3em] text-white/60">{"Mut • Iny"}</div>
-            </div>
+       <WaveLogo/>
           </Link>
 
           <nav className="hidden md:flex items-center gap-6">
-            <a href="#match" className="text-sm text-white/80 hover:text-white transition-colors">
+            <Link href="#match" className="text-sm text-white/80 hover:text-white transition-colors">
               Align
-            </a>
-            <a href="#duo" className="text-sm text-white/80 hover:text-white transition-colors">
+            </Link>
+            <Link href="#duo" className="text-sm text-white/80 hover:text-white transition-colors">
               Duo
-            </a>
-            <a href="#funding" className="text-sm text-white/80 hover:text-white transition-colors">
+            </Link>
+            <Link href="#funding" className="text-sm text-white/80 hover:text-white transition-colors">
               Funding
-            </a>
+            </Link>
             <Button
               onClick={handleEarlyAccess}
               className={cn(
@@ -83,15 +68,15 @@ export function NavAvant() {
       {open && (
         <div className="md:hidden border-t border-white/10 bg-black/50 backdrop-blur">
           <div className="mx-auto max-w-6xl px-6 py-4 grid gap-3">
-            <a href="#match" className="text-sm text-white/90">
+            <Link scroll={false} href="#match" className="text-sm text-white/90">
               Align
-            </a>
-            <a href="#duo" className="text-sm text-white/90">
+            </Link>
+            <Link scroll={false}  href="#duo" className="text-sm text-white/90">
               Duo
-            </a>
-            <a href="#funding" className="text-sm text-white/90">
+            </Link>
+            <Link scroll={false}  href="#funding" className="text-sm text-white/90">
               Funding
-            </a>
+            </Link>
             <Button
               onClick={handleEarlyAccess}
               className="w-full rounded-full bg-white text-black hover:bg-[#e3c27a]"
