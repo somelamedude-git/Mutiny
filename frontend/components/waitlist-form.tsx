@@ -8,7 +8,7 @@ import { CheckCircle } from "lucide-react";
 const allowedDomains = ["gmail.com", "yahoo.com", "outlook.com", "hotmail.com"];
 
 // Email validation function (also moved outside)
-const validateEmail = (value) => {
+const validateEmail = (value:string):boolean => {
   const trimmed = value.trim();
   const emailPattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
   if (!emailPattern.test(trimmed)) return false;
@@ -23,46 +23,48 @@ export default function JoinForm() {
   const [submitted, setSubmitted] = useState(false);
   const [lastSubmit, setLastSubmit] = useState(0);
 
-  const onChangeEmail = (e) => {
-    const value = e.target.value;
-    setEmail(value);
-    setValid(validateEmail(value));
-    // Reset submitted state when user starts typing again
-    if (submitted) setSubmitted(false);
-  };
+const onChangeEmail = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const value = e.target.value;
+  setEmail(value);
+  setValid(validateEmail(value));
+  if (submitted) setSubmitted(false);
+};
 
-  const onSubmit = async (e) => {
-    e.preventDefault();
-    if (!valid || loading) return;
-    
-    // Rate limiting - prevent rapid submissions
-    if (Date.now() - lastSubmit < 1000) return;
-    setLastSubmit(Date.now());
+const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  e.preventDefault();
+  if (!valid || loading) return;
 
-    setLoading(true);
-    try {
-      const res = await axios.post("#", { email: email.trim() });
-      console.log("Email submitted:", res.data);
-      setEmail("");
-      setValid(false);
-      setSubmitted(true);
-      
-      // Auto-hide success message after 5 seconds
-      setTimeout(() => setSubmitted(false), 5000);
-    } catch (error) {
-      console.error("Failed to send email:", error);
-      
-      // More specific error messages with axios
-      const message = error.response?.status === 409 
-        ? "Email already registered!" 
-        : error.response?.status >= 500
+  if (Date.now() - lastSubmit < 1000) return;
+  setLastSubmit(Date.now());
+
+  setLoading(true);
+  try {
+    const res = await axios.post("#", { email: email.trim() });
+    console.log("Email submitted:", res.data);
+    setEmail("");
+    setValid(false);
+    setSubmitted(true);
+
+    setTimeout(() => setSubmitted(false), 5000);
+  } catch (error: unknown) {
+      if (axios.isAxiosError(error)) {
+    // now TypeScript knows error.response exists
+    const message =
+      error.response?.status === 409
+        ? "Email already registered!"
+        : error.response?.status && error.response.status >= 500
         ? "Server error. Please try again later."
         : "Something went wrong. Please try again.";
-      alert(message);
-    } finally {
-      setLoading(false);
-    }
-  };
+    alert(message);
+  } else {
+    console.error("Non-Axios error:", error);
+    alert("Something went wrong. Please try again.");
+  }
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   // Success state with aesthetic animation
   if (submitted) {
@@ -90,36 +92,36 @@ export default function JoinForm() {
   }
 
   return (
-    <div onSubmit={onSubmit} className="flex gap-2">
-      <label htmlFor="email" className="sr-only">
-        Email
-      </label>
-      <div className="relative flex-1">
-        <Input
-          id="email"
-          type="email"
-          placeholder="you@domain.com"
-          value={email}
-          onChange={onChangeEmail}
-          className="rounded-full bg-black/30 border-white/15 text-white placeholder:text-white/40 transition-all duration-200 focus:border-white/30 focus:bg-black/40"
-          required
-        />
+  <form onSubmit={onSubmit} className="flex gap-2">
+  <label htmlFor="email" className="sr-only">
+    Email
+  </label>
+  <div className="relative flex-1">
+    <Input
+      id="email"
+      type="email"
+      placeholder="you@domain.com"
+      value={email}
+      onChange={onChangeEmail}
+      className="rounded-full bg-black/30 border-white/15 text-white placeholder:text-white/40 transition-all duration-200 focus:border-white/30 focus:bg-black/40"
+      required
+    />
+  </div>
+  <Button
+    type="submit"
+    disabled={!valid || loading}
+    className="rounded-full bg-white text-black hover:bg-[#e3c27a] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed min-w-[80px]"
+  >
+    {loading ? (
+      <div className="flex items-center gap-2">
+        <div className="w-4 h-4 border-2 border-black/20 border-t-black animate-spin rounded-full" />
+        Joining...
       </div>
-      <Button
-        type="submit"
-        onClick={onSubmit}
-        disabled={!valid || loading}
-        className="rounded-full bg-white text-black hover:bg-[#e3c27a] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed min-w-[80px]"
-      >
-        {loading ? (
-          <div className="flex items-center gap-2">
-            <div className="w-4 h-4 border-2 border-black/20 border-t-black animate-spin rounded-full" />
-            Joining...
-          </div>
-        ) : (
-          "Join"
-        )}
-      </Button>
-    </div>
+    ) : (
+      "Join"
+    )}
+  </Button>
+</form>
+
   );
 }
