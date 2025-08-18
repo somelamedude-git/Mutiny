@@ -8,23 +8,11 @@ import { FooterAvant } from "@/components/footer-avant"
 export default function Page() {
   return (
 
-    
-
-    // Move To Next Page 
-
-
-
+  
     <main className="min-h-screen bg-[#0a0a0c] text-white">
       <div>
         <a href="/investor">lmao</a>
       </div>
-
-      
-
-      {/* Nothing */}
-
-
-      
       <div
         aria-hidden="true"
         className="fixed inset-0 -z-30 opacity-40"
