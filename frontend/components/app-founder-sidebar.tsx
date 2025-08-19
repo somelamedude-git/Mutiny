@@ -39,7 +39,7 @@ export function AppFounderSidebar() {
           <SidebarMenuItem>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <SidebarMenuButton className="justify-between">
+                <SidebarMenuButton className="justify-between py-9 h-14">
                   <div className="flex items-center gap-2">
                     <div className="h-5 w-5 rounded-sm bg-gradient-to-br from-white/70 to-white/30" />
                     <span>Mutiny • Founder</span>
@@ -49,8 +49,6 @@ export function AppFounderSidebar() {
               </DropdownMenuTrigger>
               <DropdownMenuContent className="w-(--radix-popper-anchor-width)">
                 <DropdownMenuItem>Switch account type</DropdownMenuItem>
-                <DropdownMenuItem>Invite team members</DropdownMenuItem>
-                <DropdownMenuItem>Billing</DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           </SidebarMenuItem>
