@@ -1,8 +1,18 @@
+import { Suspense, lazy } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { ConciergeRail } from "@/components/concierge-rail"
 import { Search, ArrowUpRight } from "lucide-react"
-import Link from 'next/link';
+import Link from 'next/link'
+
+// Lazy load the concierge rail component
+const ConciergeRail = lazy(() => import("@/components/concierge-rail").then(module => ({ default: module.ConciergeRail })))
+
+// Loading fallback component
+const LoadingSpinner = () => (
+  <div className="flex items-center justify-center py-8">
+    <div className="w-6 h-6 border-2 border-white/20 border-t-white/60 rounded-full animate-spin"></div>
+  </div>
+)
 
 export default function InvestorOverviewPage() {
   return (
@@ -89,8 +99,10 @@ export default function InvestorOverviewPage() {
           </Card>
         </div>
 
-        {/* Concierge rail */}
-        <ConciergeRail />
+        {/* Concierge rail - Lazy loaded */}
+        <Suspense fallback={<LoadingSpinner />}>
+          <ConciergeRail />
+        </Suspense>
       </div>
     </div>
   )
@@ -108,17 +120,17 @@ function PageHeader() {
           </p>
         </div>
         
-<div className="sm:ml-auto flex items-center gap-2">
-  <Link href="/search" passHref>
-    <button
-      className="rounded-md bg-white text-[#0b0b0c] hover:bg-white/90 flex items-center px-3 py-2"
-      type="button"
-    >
-      <Search className="mr-2 h-4 w-4" />
-      Discover
-    </button>
-  </Link>
-</div>
+        <div className="sm:ml-auto flex items-center gap-2">
+          <Link href="/search" passHref>
+            <button
+              className="rounded-md bg-white text-[#0b0b0c] hover:bg-white/90 flex items-center px-3 py-2"
+              type="button"
+            >
+              <Search className="mr-2 h-4 w-4" />
+              Discover
+            </button>
+          </Link>
+        </div>
       </div>
     </div>
   )
