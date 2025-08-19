@@ -15,22 +15,21 @@ import {
   SidebarMenuItem,
   SidebarRail,
 } from "@/components/ui/sidebar"
-import { Home, Search, Coins, MessageSquareText, UserRound, Settings, ChevronDown } from "lucide-react"
+import { Home, MessageSquareText, Settings, UserRound, Lightbulb, Coins, Sparkles, ChevronDown } from "lucide-react"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { SidebarMenuAction } from "@/components/ui/sidebar"
 import { Button } from "@/components/ui/button"
-import { LogoSquare } from "./LogoSquare"
 
 const NAV = [
-  { title: "Overview", url: "/investor", icon: Home },
-  { title: "Search", url: "/investor/search", icon: Search },
-  { title: "Investments", url: "/investor/investments", icon: Coins },
-  { title: "Chats", url: "/investor/chats", icon: MessageSquareText },
-  { title: "Profile", url: "/investor/profile", icon: UserRound },
-  { title: "Settings", url: "/investor/settings", icon: Settings },
+  { title: "Overview", url: "/founder", icon: Home },
+  { title: "Ideas", url: "/founder/ideas", icon: Lightbulb },
+  { title: "Community funding", url: "/founder/funding", icon: Coins },
+  { title: "Chats", url: "/founder/chats", icon: MessageSquareText },
+  { title: "Mutiny", url: "/founder/mutiny", icon: Sparkles },
+  { title: "Profile", url: "/founder/profile", icon: UserRound },
+  { title: "Settings", url: "/founder/settings", icon: Settings },
 ]
 
-export function AppInvestorSidebar() {
+export function AppFounderSidebar() {
   const pathname = usePathname()
 
   return (
@@ -40,21 +39,19 @@ export function AppInvestorSidebar() {
           <SidebarMenuItem>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <SidebarMenuButton className="justify-between h-14">
+                <SidebarMenuButton className="justify-between">
                   <div className="flex items-center gap-2">
-                    <LogoSquare />
-
-                    <span>Mutiny • Investor</span>
+                    <div className="h-5 w-5 rounded-sm bg-gradient-to-br from-white/70 to-white/30" />
+                    <span>Mutiny • Founder</span>
                   </div>
                   <ChevronDown className="opacity-60" />
                 </SidebarMenuButton>
               </DropdownMenuTrigger>
-<DropdownMenuContent className="w-(--radix-popper-anchor-width)">
-  <DropdownMenuItem asChild>
-    <Link href="/founder">Switch to Founder Dashboard</Link>
-  </DropdownMenuItem>
-</DropdownMenuContent>
-
+              <DropdownMenuContent className="w-(--radix-popper-anchor-width)">
+                <DropdownMenuItem>Switch account type</DropdownMenuItem>
+                <DropdownMenuItem>Invite team members</DropdownMenuItem>
+                <DropdownMenuItem>Billing</DropdownMenuItem>
+              </DropdownMenuContent>
             </DropdownMenu>
           </SidebarMenuItem>
         </SidebarMenu>
@@ -70,16 +67,11 @@ export function AppInvestorSidebar() {
                 return (
                   <SidebarMenuItem key={item.title}>
                     <SidebarMenuButton asChild isActive={active} tooltip={item.title}>
-                      <Link href={item.url} prefetch>
+                      <Link href={item.url}>
                         <item.icon />
                         <span>{item.title}</span>
                       </Link>
                     </SidebarMenuButton>
-                    {item.title === "Search" && (
-                      <SidebarMenuAction asChild showOnHover>
-                        <button title="Quick search">⌘K</button>
-                      </SidebarMenuAction>
-                    )}
                   </SidebarMenuItem>
                 )
               })}
@@ -87,6 +79,12 @@ export function AppInvestorSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
 
+        <SidebarGroup>
+          <SidebarGroupLabel>Quick</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <Button className="w-full h-8 text-sm bg-white text-black hover:bg-white/90">Post new idea</Button>
+          </SidebarGroupContent>
+        </SidebarGroup>
       </SidebarContent>
 
       <SidebarFooter className="border-t border-[#1a1b1e]">

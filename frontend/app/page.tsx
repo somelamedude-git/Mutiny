@@ -11,7 +11,8 @@ export default function Page() {
   
     <main className="min-h-screen bg-[#0a0a0c] text-white">
       <div>
-        <a href="/investor">lmao</a>
+        <a href="/investor">investor</a><br></br>
+        <a href="/founder">founder</a>
       </div>
       <div
         aria-hidden="true"
