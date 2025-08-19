@@ -19,15 +19,15 @@ export default function InvestorLayout({ children }: { children: React.ReactNode
     { search: "Search", investments: "Investments", chats: "Chats", profile: "Profile" }[seg ?? ""] ?? "Overview"
 
   return (
-
-
-    
-    // Side Menu for investors Page
-
-
-
     <div className="min-h-screen bg-[#0a0a0c]">
       <SidebarProvider>
+
+
+
+         {/*  Side Menu for investors Page */}
+
+
+
         <AppInvestorSidebar />
 
 
