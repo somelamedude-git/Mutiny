@@ -49,6 +49,7 @@ export function AppInvestorSidebar() {
                   <ChevronDown className="opacity-60" />
                 </SidebarMenuButton>
               </DropdownMenuTrigger>
+              
 <DropdownMenuContent className="w-(--radix-popper-anchor-width)">
   <DropdownMenuItem asChild>
     <Link href="/founder">Switch to Founder Dashboard</Link>
