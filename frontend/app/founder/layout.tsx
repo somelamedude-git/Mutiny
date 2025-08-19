@@ -13,7 +13,6 @@ import { Input } from "@/components/ui/input"
 import { Separator } from "@/components/ui/separator"
 import { Search, Plus } from "lucide-react"
 import { cn } from "@/lib/utils"
-import { AppInvestorSidebar } from "@/components/app-investor-sidebar"
 
 export default function FounderLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
@@ -38,7 +37,7 @@ export default function FounderLayout({ children }: { children: React.ReactNode 
 
   return (
     <SidebarProvider>
-      <AppInvestorSidebar />
+      <AppFounderSidebar />
       <SidebarInset className="bg-[#0b0b0c] text-white">
         <Suspense fallback={<div className="p-4">Loading...</div>}>
           <header className="flex h-14 shrink-0 items-center gap-2 border-b border-[#1a1b1e] px-4 py-10">
@@ -46,7 +45,7 @@ export default function FounderLayout({ children }: { children: React.ReactNode 
             <Separator orientation="vertical" className="mr-2 h-5 bg-[#1a1b1e]" />
             <nav className="flex items-center gap-2 sm:gap-3">
               <Link href="/founder" className="text-sm sm:text-base font-semibold tracking-tight">
-                Investor
+                Founder
               </Link>
               <span className="text-white/40">/</span>
               <span className="text-white/70 text-sm">{section}</span>
@@ -68,7 +67,7 @@ export default function FounderLayout({ children }: { children: React.ReactNode 
                 )}
               >
                 <Plus className="mr-2 h-4 w-4" />
-                New Allocation
+                New idea
               </Button>
               <NotificationsDropdown />
               <div className="h-8 w-8 rounded-md ring-1 ring-[#1a1b1e] bg-[#101113]" />
