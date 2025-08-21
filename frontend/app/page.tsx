@@ -10,9 +10,6 @@ export default function Page() {
 
   
     <main className="min-h-screen bg-[#0a0a0c] text-white">
-      <div>
-        <a href="/investor">lmao</a>
-      </div>
       <div
         aria-hidden="true"
         className="fixed inset-0 -z-30 opacity-40"
