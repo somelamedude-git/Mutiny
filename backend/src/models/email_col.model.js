@@ -5,7 +5,7 @@ const emailCollectionSchema = new mongoose.Schema({
 		type: String,
 		required: true
 	}
-});
+}, {timestamps: true});
 
 const Email = mongoose.model('Email', emailCollectionSchema);
 
