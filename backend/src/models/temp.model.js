@@ -15,7 +15,7 @@ const tempSchema = new mongoose.Schema({
 	mailTokenExp: {
 		type: Date
 	}
-});
+}, {timestamps: true});
 
 tempSchema.methods.getVerificationToken = function(){
 	const token = crypto.randomBytes(29).toString('hex');
@@ -28,7 +28,11 @@ tempSchema.methods.getVerificationToken = function(){
 	return token;
 }
 
+const TempUser = mongoose.model('TempUser', tempSchema);
 
+module.exports = {
+	TempUser
+}
 
 
 
