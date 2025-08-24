@@ -23,7 +23,7 @@ export function NavAvant() {
   }
 
   // Smooth scroll function with custom speed
-  const smoothScrollTo = (targetId) => {
+  const smoothScrollTo = (targetId: string) => {
     const element = document.getElementById(targetId.substring(1)) // Remove #
     if (element) {
       const targetPosition = element.offsetTop
@@ -31,9 +31,9 @@ export function NavAvant() {
       const distance = targetPosition - startPosition
       const duration = 2000 // 2 seconds - adjust for slower/faster scrolling
       
-      let start = null
+      let start: number | null = null
       
-      function animation(currentTime) {
+      function animation(currentTime: number) {
         if (start === null) start = currentTime
         const timeElapsed = currentTime - start
         const run = easeInOutQuad(timeElapsed, startPosition, distance, duration)
@@ -42,7 +42,7 @@ export function NavAvant() {
       }
       
       // Smooth easing function
-      function easeInOutQuad(t, b, c, d) {
+      function easeInOutQuad(t: number, b: number, c: number, d: number): number {
         t /= d / 2
         if (t < 1) return c / 2 * t * t + b
         t--
@@ -53,7 +53,7 @@ export function NavAvant() {
     }
   }
 
-  const handleNavClick = (e, href) => {
+  const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
     e.preventDefault()
     smoothScrollTo(href)
     setOpen(false) // Close mobile menu if open

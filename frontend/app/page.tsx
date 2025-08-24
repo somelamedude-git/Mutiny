@@ -18,10 +18,6 @@ const LoadingSpinner = () => (
 export default function Page() {
   return (
     <main className="min-h-screen bg-[#0a0a0c] text-white">
-      <div>
-        <a href="/investor">investor</a><br></br>
-        <a href="/founder">founder</a>
-      </div>
       <div
         aria-hidden="true"
         className="fixed inset-0 -z-30 opacity-40"
