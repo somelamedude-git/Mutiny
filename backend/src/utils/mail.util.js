@@ -29,14 +29,27 @@ const verifyMail = async(req, res)=>{
 	.digest('hex');
 
 	const tempuser = await TempUser.findOne({mailToken: hashedToken, mailTokenExp: {$gt: Date.now()}});
+	const id = tempuser._id.toString();
 
 	const emailReg = tempuser.email;
 	await Email.create({
 		email: emailReg
 	});
 
+	await TempUser.findByIdAndDelete(id);
+	await TempUser.save();
 	await Email.save();
 
+	res.status(200).json({
+		success: true,
+		message: 'You are verified now'}
+	);
+
+}
+
+module.exports = {
+	sendEmail,
+	verifyEmail
 }
 
 
