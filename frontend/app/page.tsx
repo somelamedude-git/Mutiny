@@ -8,6 +8,18 @@ const DuoSynth = lazy(() => import("@/components/duo-synth").then(module => ({ d
 const FundingOrbit = lazy(() => import("@/components/funding-orbit").then(module => ({ default: module.FundingOrbit })))
 const FooterAvant = lazy(() => import("@/components/footer-avant").then(module => ({ default: module.FooterAvant })))
 
+// HeroConstellation
+// MatchCabinet
+// DuoSynth
+// FundingOrbit
+// FooterAvant
+// component, ui, button
+// waitlist-form
+// lib, utils
+// ui, text-area
+// nav avant
+// mutiny-logo
+
 
 const LoadingSpinner = () => (
   <div className="flex items-center justify-center py-16">
@@ -18,6 +30,10 @@ const LoadingSpinner = () => (
 export default function Page() {
   return (
     <main className="min-h-screen bg-[#0a0a0c] text-white">
+      <div>
+        <a href="investor/">investor</a><br />
+        <a href="founder/">founder</a>
+      </div>
       <div
         aria-hidden="true"
         className="fixed inset-0 -z-30 opacity-40"
