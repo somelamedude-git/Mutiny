@@ -16,19 +16,32 @@ import { cn } from "@/lib/utils"
 import { VerificationBadge } from "@/components/verification-badge"
 import { TrustInspector } from "@/components/trust-inspector"
 import { AvatarUploader } from "@/components/avatar-uploader"
+import { useAvatar } from "@/components/avatar-context"
 
 const INTERESTS = ["Climate hardware", "Edge AI", "Local‑first", "Robotics", "Bio tooling", "Privacy", "DePIN"]
 
 export default function InvestorProfilePage() {
+  const { avatarUrl, setAvatarUrl, userName, setUserName } = useAvatar()
+  
   // Essentials
-  const [name, setName] = useState("Alex Rivera")
+  const [name, setNameLocal] = useState(userName)
   const [firm, setFirm] = useState("Independent • Syndicate")
   const [minCheck, setMinCheck] = useState(5000)
   const [maxCheck, setMaxCheck] = useState(50000)
   const [bio, setBio] = useState(
     "Angel investor focused on climate hardware and local‑first tooling. Prefer milestone releases with transparent receipts.",
   )
-  const [avatarUrl, setAvatarUrl] = useState<string | null>(null)
+
+  // Update context when name changes
+  const handleNameChange = (newName: string) => {
+    setNameLocal(newName)
+    setUserName(newName)
+  }
+
+  // Update context when avatar changes
+  const handleAvatarChange = (_: File | null, url: string | null) => {
+    setAvatarUrl(url)
+  }
 
   // Interests
   const [interests, setInterests] = useState<string[]>(["Climate hardware", "Edge AI", "Local‑first"])
@@ -71,7 +84,12 @@ export default function InvestorProfilePage() {
         <div className="grid gap-4 md:grid-cols-[auto_minmax(0,1fr)] lg:grid-cols-[auto_minmax(0,1fr)_360px] md:items-start lg:items-center">
           {/* Avatar */}
           <div>
-            <AvatarUploader name={name} src={avatarUrl} onChange={(_, url) => setAvatarUrl(url)} size={80} />
+            <AvatarUploader 
+              name={name} 
+              src={avatarUrl} 
+              onChange={handleAvatarChange}
+              size={80} 
+            />
           </div>
 
           {/* Name + Verified + Firm */}
@@ -116,7 +134,7 @@ export default function InvestorProfilePage() {
               <Field label="Name">
                 <Input
                   value={name}
-                  onChange={(e) => setName(e.target.value)}
+                  onChange={(e) => handleNameChange(e.target.value)}
                   className="bg-[#0f1012] border-[#1a1b1e]"
                 />
               </Field>
@@ -347,7 +365,7 @@ export default function InvestorProfilePage() {
             </CardHeader>
             <CardContent className="space-y-2 text-sm">
               <div className="rounded-md border border-white/10 bg-[#0f1012] px-3 py-2">
-                Verified investors can enable “Public profile” to receive curated intros.
+                Verified investors can enable &quot; Public profile &quot; to receive curated intros.
               </div>
               <div className="rounded-md border border-white/10 bg-[#0f1012] px-3 py-2">
                 Trust grows with NDA usage, escrow releases, and verified receipts.
