@@ -12,13 +12,15 @@ import { cn } from "@/lib/utils"
 
 type Tab = "yours" | "discover"
 
+type Stage = "concept" | "prototype" | "mvp" | "launched"
+
 type Idea = {
   id: string
   title: string
   author: string
   desc: string
   tags: string[]
-  stage: "concept" | "prototype" | "mvp" | "launched"
+  stage: Stage
   funding?: string
   likes: number
   comments: number
@@ -28,6 +30,15 @@ type Idea = {
   description?: string
   isDraft?: boolean
   createdAt?: string
+}
+
+type IdeaFormData = {
+  title: string
+  description: string
+  tags: string[]
+  stage: Stage
+  lookingFor: string[]
+  isDraft: boolean
 }
 
 const YOUR_IDEAS: Idea[] = [
@@ -179,7 +190,7 @@ export default function FounderIdeasPage() {
       idea.tags.some((tag) => tag.toLowerCase().includes(query.toLowerCase())),
   )
 
-  function handleIdeaSubmit(data: any) {
+  function handleIdeaSubmit(data: IdeaFormData) {
     const newIdea: Idea = {
       id: `y${Date.now()}`,
       title: data.title,
@@ -187,7 +198,7 @@ export default function FounderIdeasPage() {
       desc: data.description,
       description: data.description,
       tags: data.tags,
-      stage: data.stage as any,
+      stage: data.stage,
       likes: 0,
       comments: 0,
       views: 0,
@@ -200,7 +211,7 @@ export default function FounderIdeasPage() {
     setYourIdeas((prev) => [newIdea, ...prev])
   }
 
-  function handleIdeaUpdate(ideaData: any) {
+  function handleIdeaUpdate(ideaData: IdeaFormData) {
     if (editingIdea) {
       setYourIdeas((prev) =>
         prev.map((idea) =>
@@ -211,7 +222,7 @@ export default function FounderIdeasPage() {
                 desc: ideaData.description,
                 description: ideaData.description,
                 tags: ideaData.tags,
-                stage: ideaData.stage as any,
+                stage: ideaData.stage,
                 lookingFor: ideaData.lookingFor,
                 isDraft: ideaData.isDraft,
               }
@@ -221,6 +232,20 @@ export default function FounderIdeasPage() {
     }
     setEditingIdea(null)
     setIsModalOpen(false)
+  }
+
+  function handleModalSubmit(data: IdeaFormData) {
+    if (editingIdea) {
+      handleIdeaUpdate(data)
+    } else {
+      handleIdeaSubmit(data)
+    }
+  }
+
+  function handleModalDelete() {
+    if (editingIdea) {
+      handleIdeaDelete(editingIdea.id)
+    }
   }
 
   function handleIdeaDelete(id: string) {
@@ -436,8 +461,8 @@ export default function FounderIdeasPage() {
       <PostIdeaModal
         isOpen={isModalOpen}
         onClose={handleCloseModal}
-        onSubmit={editingIdea ? handleIdeaUpdate : handleIdeaSubmit}
-        onDelete={editingIdea ? handleIdeaDelete : undefined}
+        onSubmit={handleModalSubmit}
+        onDelete={editingIdea ? handleModalDelete : undefined}
         editingIdea={editingIdea}
       />
     </div>

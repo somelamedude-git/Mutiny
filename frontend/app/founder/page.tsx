@@ -1,7 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Lightbulb, Users, Coins, MessageSquareText } from "lucide-react"
+import { Lightbulb, Users, Coins, MessageSquareText, LucideIcon } from "lucide-react"
 
 export default function FounderOverviewPage() {
   return (
@@ -129,7 +129,7 @@ export default function FounderOverviewPage() {
   )
 }
 
-function Kpi({ title, value, icon: Icon }: { title: string; value: string; icon: any }) {
+function Kpi({ title, value, icon: Icon }: { title: string; value: string; icon: LucideIcon }) {
   return (
     <div className="rounded-lg border border-[#1a1b1e] bg-[#101113] p-4">
       <div className="flex items-center gap-2">
