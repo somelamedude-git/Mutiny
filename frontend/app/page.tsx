@@ -1,25 +1,12 @@
 import { Suspense, lazy } from "react"
 import { NavAvant } from "@/components/nav-avant"
 
-
 const HeroConstellation = lazy(() => import("@/components/hero-constellation").then(module => ({ default: module.HeroConstellation })))
 const MatchCabinet = lazy(() => import("@/components/match-cabinet").then(module => ({ default: module.MatchCabinet })))
 const DuoSynth = lazy(() => import("@/components/duo-synth").then(module => ({ default: module.DuoSynth })))
 const FundingOrbit = lazy(() => import("@/components/funding-orbit").then(module => ({ default: module.FundingOrbit })))
 const FooterAvant = lazy(() => import("@/components/footer-avant").then(module => ({ default: module.FooterAvant })))
-
-// HeroConstellation
-// MatchCabinet
-// DuoSynth
-// FundingOrbit
-// FooterAvant
-// component, ui, button
-// waitlist-form
-// lib, utils
-// ui, text-area
-// nav avant
-// mutiny-logo
-
+import Link from "next/link"
 
 const LoadingSpinner = () => (
   <div className="flex items-center justify-center py-16">
@@ -30,13 +17,8 @@ const LoadingSpinner = () => (
 export default function Page() {
   return (
     <main className="min-h-screen bg-[#0a0a0c] text-white">
-<<<<<<< HEAD
-=======
-      <div>
-        <a href="investor/">investor</a><br />
-        <a href="founder/">founder</a>
-      </div>
->>>>>>> Mut
+      <Link href="/investor">Investor</Link>
+      <Link href="/founder">Founder</Link>
       <div
         aria-hidden="true"
         className="fixed inset-0 -z-30 opacity-40"
@@ -55,15 +37,12 @@ export default function Page() {
         }}
       />
       
-      {/* Menu - Keep immediately available */}
       <NavAvant />
       
-      {/*Main Header - Lazy loaded */}
       <Suspense fallback={<LoadingSpinner />}>
         <HeroConstellation />
       </Suspense>
-      
-      {/*Middle Body*/}
+
       <section className="mx-auto max-w-6xl px-6 sm:px-8 py-10 sm:py-16">
         <div className="rounded-xl border border-white/10 bg-white/[0.02] p-4 sm:p-6">
           <p className="text-white/70 text-sm sm:text-base leading-relaxed">
@@ -73,29 +52,25 @@ export default function Page() {
           </p>
         </div>
       </section>
-      
-      {/* Filters */}
+
       <section className="mx-auto max-w-6xl px-6 sm:px-8 py-10 sm:py-16">
         <Suspense fallback={<LoadingSpinner />}>
           <MatchCabinet />
         </Suspense>
       </section>
-      
-      {/*AI*/}
+
       <section className="mx-auto max-w-6xl px-6 sm:px-8 py-10 sm:py-16">
         <Suspense fallback={<LoadingSpinner />}>
           <DuoSynth />
         </Suspense>
       </section>
-      
-      {/* Community Funding */}
+
       <section className="mx-auto max-w-6xl px-6 sm:px-8 py-10 sm:py-16">
         <Suspense fallback={<LoadingSpinner />}>
           <FundingOrbit />
         </Suspense>
       </section>
-      
-      {/* Footer */}
+
       <Suspense fallback={<LoadingSpinner />}>
         <FooterAvant />
       </Suspense>
