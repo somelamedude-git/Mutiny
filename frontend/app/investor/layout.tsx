@@ -12,6 +12,8 @@ import { Separator } from "@/components/ui/separator"
 import { Search, Plus, Bell } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { AvatarProvider, useAvatar } from "@/components/avatar-context"
+import Image from "next/image";
+
 
 function InvestorLayoutContent({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
@@ -72,11 +74,13 @@ function InvestorLayoutContent({ children }: { children: React.ReactNode }) {
                 <Link href="/investor/profile" className="block">
                   <div className="h-8 w-8 rounded-md ring-1 ring-[#1a1b1e] bg-[#101113] overflow-hidden cursor-pointer hover:ring-white/30 transition-all">
                     {avatarUrl ? (
-                      <img 
-                        src={avatarUrl} 
-                        alt={userName}
-                        className="h-full w-full object-cover"
-                      />
+  <Image
+    src={avatarUrl}
+    alt={userName}
+    width={32}
+    height={32}
+    className="h-full w-full object-cover rounded-md"
+  />
                     ) : (
                       <div className="h-full w-full flex items-center justify-center text-[10px] font-medium text-white/70">
                         {getInitials(userName)}

@@ -1,18 +1,18 @@
 "use client"
 
 import type React from "react"
-
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Link from "next/link"
+import axios from "axios"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Button } from "@/components/ui/button"
 import { Switch } from "@/components/ui/switch"
-import { Building2, Link2, ShieldCheck, Tag, UserRound, Wallet } from "lucide-react"
+import { Building2, Link2, ShieldCheck, Tag, UserRound, Wallet, Loader2 } from "lucide-react"
 import { cn } from "@/lib/utils"
 
-// Shared components already in this project:
+// Shared components
 import { VerificationBadge } from "@/components/verification-badge"
 import { TrustInspector } from "@/components/trust-inspector"
 import { AvatarUploader } from "@/components/avatar-uploader"
@@ -20,83 +20,234 @@ import { useAvatar } from "@/components/avatar-context"
 
 const INTERESTS = ["Climate hardware", "Edge AI", "Local‑first", "Robotics", "Bio tooling", "Privacy", "DePIN"]
 
+type InvestorProfile = {
+  name: string
+  firm: string
+  minCheck: number
+  maxCheck: number
+  bio: string
+  interests: string[]
+  escrowRequired: boolean
+  ndaPreferred: boolean
+  pacePerQuarter: number
+  stageFocus: ("Pre‑seed" | "Angel" | "Seed")[]
+  publicProfile: boolean
+  handle: string
+  trust: number
+  trustBreakdown: {
+    ndas: number
+    escrowReleases: number
+    receipts: number
+    history: number
+  }
+  links: Array<{ label: string; href: string }>
+  portfolio: Array<{ id: string; name: string }>
+}
+
 export default function InvestorProfilePage() {
   const { avatarUrl, setAvatarUrl, userName, setUserName } = useAvatar()
   
-  // Essentials
-  const [name, setNameLocal] = useState(userName)
-  const [firm, setFirm] = useState("Independent • Syndicate")
+  // Profile state
+  const [profile, setProfile] = useState<InvestorProfile | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  // Individual field states (synced with profile)
+  const [name, setName] = useState("")
+  const [firm, setFirm] = useState("")
   const [minCheck, setMinCheck] = useState(5000)
   const [maxCheck, setMaxCheck] = useState(50000)
-  const [bio, setBio] = useState(
-    "Angel investor focused on climate hardware and local‑first tooling. Prefer milestone releases with transparent receipts.",
-  )
-
-  // Update context when name changes
-  const handleNameChange = (newName: string) => {
-    setNameLocal(newName)
-    setUserName(newName)
-  }
-
-  // Update context when avatar changes
-  const handleAvatarChange = (_: File | null, url: string | null) => {
-    setAvatarUrl(url)
-  }
-
-  // Interests
-  const [interests, setInterests] = useState<string[]>(["Climate hardware", "Edge AI", "Local‑first"])
-
-  // Preferences
+  const [bio, setBio] = useState("")
+  const [interests, setInterests] = useState<string[]>([])
   const [escrowRequired, setEscrowRequired] = useState(true)
   const [ndaPreferred, setNdaPreferred] = useState(true)
   const [pacePerQuarter, setPacePerQuarter] = useState(4)
-  const [stageFocus, setStageFocus] = useState<("Pre‑seed" | "Angel" | "Seed")[]>(["Pre‑seed", "Angel", "Seed"])
-
-  // Visibility & links
+  const [stageFocus, setStageFocus] = useState<("Pre‑seed" | "Angel" | "Seed")[]>([])
   const [publicProfile, setPublicProfile] = useState(true)
-  const [handle, setHandle] = useState("alex")
-  const [links] = useState([
-    { label: "LinkedIn", href: "#" },
-    { label: "Website", href: "#" },
-  ])
+  const [handle, setHandle] = useState("")
 
-  // Trust (mocked)
-  const trust = 82
-  const trustBreakdown = { ndas: 3, escrowReleases: 5, receipts: 12, history: 2 }
+  // Fetch profile on mount
+  useEffect(() => {
+    fetchProfile()
+  }, [])
+
+  // Sync local state with profile
+  useEffect(() => {
+    if (profile) {
+      setName(profile.name)
+      setUserName(profile.name)
+      setFirm(profile.firm)
+      setMinCheck(profile.minCheck)
+      setMaxCheck(profile.maxCheck)
+      setBio(profile.bio)
+      setInterests(profile.interests)
+      setEscrowRequired(profile.escrowRequired)
+      setNdaPreferred(profile.ndaPreferred)
+      setPacePerQuarter(profile.pacePerQuarter)
+      setStageFocus(profile.stageFocus)
+      setPublicProfile(profile.publicProfile)
+      setHandle(profile.handle)
+    }
+  }, [profile, setUserName])
+
+  const fetchProfile = async () => {
+    try {
+      setLoading(true)
+      setError(null)
+      const response = await axios.get<InvestorProfile>("#/api/investor/profile")
+      setProfile(response.data)
+    } catch (err) {
+      setError("Failed to load profile")
+      console.error("Error fetching profile:", err)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const saveProfile = async () => {
+    try {
+      setSaving(true)
+      setError(null)
+      const payload = {
+        name,
+        firm,
+        minCheck,
+        maxCheck,
+        bio,
+      }
+      await axios.put("#/api/investor/profile", payload)
+      // Refresh profile after save
+      await fetchProfile()
+    } catch (err) {
+      setError("Failed to save profile")
+      console.error("Error saving profile:", err)
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const savePreferences = async () => {
+    try {
+      setSaving(true)
+      setError(null)
+      const payload = {
+        escrowRequired,
+        ndaPreferred,
+        pacePerQuarter,
+        stageFocus,
+      }
+      await axios.put("#/api/investor/preferences", payload)
+      await fetchProfile()
+    } catch (err) {
+      setError("Failed to save preferences")
+      console.error("Error saving preferences:", err)
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const updateInterests = async (newInterests: string[]) => {
+    try {
+      await axios.put("#/api/investor/interests", { interests: newInterests })
+      setInterests(newInterests)
+    } catch (err) {
+      console.error("Error updating interests:", err)
+    }
+  }
+
+  const updateVisibility = async (field: "publicProfile" | "handle", value: boolean | string) => {
+    try {
+      await axios.put("#/api/investor/visibility", { [field]: value })
+      if (field === "publicProfile") setPublicProfile(value as boolean)
+      if (field === "handle") setHandle(value as string)
+    } catch (err) {
+      console.error("Error updating visibility:", err)
+    }
+  }
+
+  const uploadAvatar = async (file: File) => {
+    try {
+      const formData = new FormData()
+      formData.append("avatar", file)
+      const response = await axios.post<{ url: string }>("#/api/investor/avatar", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      })
+      setAvatarUrl(response.data.url)
+    } catch (err) {
+      console.error("Error uploading avatar:", err)
+    }
+  }
+
+  const requestReverification = async () => {
+    try {
+      await axios.post("#/api/investor/reverify")
+      alert("Re-verification request submitted")
+    } catch (err) {
+      console.error("Error requesting reverification:", err)
+    }
+  }
 
   function toggleInterest(tag: string) {
-    setInterests((prev) => (prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]))
+    const newInterests = interests.includes(tag)
+      ? interests.filter((t) => t !== tag)
+      : [...interests, tag]
+    updateInterests(newInterests)
   }
+
   function toggleStage(s: "Pre‑seed" | "Angel" | "Seed") {
     setStageFocus((prev) => (prev.includes(s) ? prev.filter((x) => x !== s) : [...prev, s]))
   }
 
-  const portfolio = [
-    { id: "p1", name: "Edge Vision Kit" },
-    { id: "p2", name: "Climate Hardware v1" },
-    { id: "p3", name: "Local‑first Creator Analytics" },
-  ]
+  if (loading) {
+    return (
+      <div className="mx-auto max-w-[1400px] flex items-center justify-center min-h-[400px]">
+        <Loader2 className="h-8 w-8 animate-spin text-white/60" />
+      </div>
+    )
+  }
+
+  if (error && !profile) {
+    return (
+      <div className="mx-auto max-w-[1400px]">
+        <Card className="bg-[#101113] border-[#1a1b1e]">
+          <CardContent className="py-8 text-center">
+            <p className="text-white/60">{error}</p>
+            <Button onClick={fetchProfile} className="mt-4">
+              Retry
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
 
   return (
     <div className="mx-auto max-w-[1400px]">
+      {error && (
+        <div className="mb-4 rounded-lg bg-rose-500/10 border border-rose-500/20 px-4 py-3 text-sm text-rose-300">
+          {error}
+        </div>
+      )}
+
       {/* Header: Avatar • Info • Trust */}
       <section className="rounded-xl bg-[#101113] p-5">
         <div className="grid gap-4 md:grid-cols-[auto_minmax(0,1fr)] lg:grid-cols-[auto_minmax(0,1fr)_360px] md:items-start lg:items-center">
-          {/* Avatar */}
           <div>
-            <AvatarUploader 
-              name={name} 
-              src={avatarUrl} 
-              onChange={handleAvatarChange}
-              size={80} 
+            <AvatarUploader
+              name={userName}
+              src={avatarUrl}
+              onChange={(file, url) => {
+                if (file) uploadAvatar(file)
+                else setAvatarUrl(url)
+              }}
+              size={80}
             />
           </div>
 
-          {/* Name + Verified + Firm */}
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-2 min-w-0">
-              <h1 className="text-xl sm:text-2xl font-semibold tracking-tight break-words">{name}</h1>
-              {/* Never overlaps: shrink-0 and placed within its own wrapping group */}
+              <h1 className="text-xl sm:text-2xl font-semibold tracking-tight break-words">{userName}</h1>
               <VerificationBadge className="shrink-0" />
             </div>
             <p className="mt-1 flex items-center gap-2 text-white/70 text-sm">
@@ -105,12 +256,19 @@ export default function InvestorProfilePage() {
             </p>
           </div>
 
-          {/* Trust + Actions (own column on lg; below on md) */}
           <div className="flex items-center gap-4 md:col-span-2 lg:col-span-1">
             <div className="flex-1 lg:flex-none">
-              <TrustInspector trust={trust} baseline={75} breakdown={trustBreakdown} className="w-full max-w-[220px]" />
+              <TrustInspector
+                trust={profile?.trust ?? 0}
+                baseline={75}
+                breakdown={profile?.trustBreakdown}
+                className="w-full max-w-[220px]"
+              />
             </div>
-            <Button className="rounded-md bg-white text-[#0b0b0c] hover:bg-white/90">
+            <Button
+              onClick={requestReverification}
+              className="rounded-md bg-white text-[#0b0b0c] hover:bg-white/90"
+            >
               <ShieldCheck className="mr-2 h-4 w-4" />
               Request re‑verify
             </Button>
@@ -134,7 +292,7 @@ export default function InvestorProfilePage() {
               <Field label="Name">
                 <Input
                   value={name}
-                  onChange={(e) => handleNameChange(e.target.value)}
+                  onChange={(e) => setName(e.target.value)}
                   className="bg-[#0f1012] border-[#1a1b1e]"
                 />
               </Field>
@@ -185,7 +343,14 @@ export default function InvestorProfilePage() {
               </div>
 
               <div className="sm:col-span-2">
-                <Button className="w-fit rounded-md bg-white text-[#0b0b0c] hover:bg-white/90">Save (not wired)</Button>
+                <Button
+                  onClick={saveProfile}
+                  disabled={saving}
+                  className="w-fit rounded-md bg-white text-[#0b0b0c] hover:bg-white/90"
+                >
+                  {saving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                  Save profile
+                </Button>
               </div>
             </CardContent>
           </Card>
@@ -282,7 +447,14 @@ export default function InvestorProfilePage() {
                 </div>
               </div>
 
-              <Button className="w-fit rounded-md bg-white text-[#0b0b0c] hover:bg-white/90">Save preferences</Button>
+              <Button
+                onClick={savePreferences}
+                disabled={saving}
+                className="w-fit rounded-md bg-white text-[#0b0b0c] hover:bg-white/90"
+              >
+                {saving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                Save preferences
+              </Button>
             </CardContent>
           </Card>
         </div>
@@ -302,7 +474,7 @@ export default function InvestorProfilePage() {
                 label="Public profile"
                 desc="Share a minimal, linkable profile."
                 checked={publicProfile}
-                onCheckedChange={setPublicProfile}
+                onCheckedChange={(v) => updateVisibility("publicProfile", v)}
               />
               <div className="grid gap-2">
                 <div className="text-xs text-white/60">Handle</div>
@@ -311,6 +483,7 @@ export default function InvestorProfilePage() {
                   <Input
                     value={handle}
                     onChange={(e) => setHandle(e.target.value)}
+                    onBlur={(e) => updateVisibility("handle", e.target.value)}
                     className="h-8 bg-[#0f1012] border-[#1a1b1e]"
                   />
                 </div>
@@ -321,16 +494,20 @@ export default function InvestorProfilePage() {
               <div className="grid gap-2">
                 <div className="text-xs text-white/60">Linked accounts</div>
                 <div className="flex flex-wrap gap-2">
-                  {links.map((l, i) => (
-                    <a
-                      key={i}
-                      href={l.href}
-                      className="inline-flex items-center gap-2 rounded-md border border-white/10 bg-[#0f1012] px-2.5 py-1.5 text-xs hover:bg-white/[0.04]"
-                    >
-                      <span className="inline-block h-1.5 w-1.5 rounded-full bg-white/60" />
-                      {l.label}
-                    </a>
-                  ))}
+                  {profile?.links && profile.links.length > 0 ? (
+                    profile.links.map((l, i) => (
+                      <a
+                        key={i}
+                        href={l.href}
+                        className="inline-flex items-center gap-2 rounded-md border border-white/10 bg-[#0f1012] px-2.5 py-1.5 text-xs hover:bg-white/[0.04]"
+                      >
+                        <span className="inline-block h-1.5 w-1.5 rounded-full bg-white/60" />
+                        {l.label}
+                      </a>
+                    ))
+                  ) : (
+                    <div className="text-xs text-white/60">No linked accounts</div>
+                  )}
                   <button className="inline-flex items-center gap-1 rounded-md border border-white/10 bg-[#0f1012] px-2 py-1 text-[11px] text-white/80 hover:bg-white/[0.04]">
                     Connect…
                   </button>
@@ -345,7 +522,7 @@ export default function InvestorProfilePage() {
               <CardTitle className="text-base">Portfolio snapshot</CardTitle>
             </CardHeader>
             <CardContent className="grid gap-2">
-              {portfolio.map((p) => (
+              {profile?.portfolio.map((p) => (
                 <Link
                   key={p.id}
                   href={`/investor/search/${p.id}`}
@@ -365,7 +542,7 @@ export default function InvestorProfilePage() {
             </CardHeader>
             <CardContent className="space-y-2 text-sm">
               <div className="rounded-md border border-white/10 bg-[#0f1012] px-3 py-2">
-                Verified investors can enable &quot; Public profile &quot; to receive curated intros.
+                Verified investors can enable &quot;Public profile&quot; to receive curated intros.
               </div>
               <div className="rounded-md border border-white/10 bg-[#0f1012] px-3 py-2">
                 Trust grows with NDA usage, escrow releases, and verified receipts.
