@@ -2,11 +2,12 @@
 
 import type React from "react"
 
-import { useEffect, useMemo, useRef, useState, useCallback } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Search, Send, ChevronLeft, MoreHorizontal, Users, Clock, CheckCheck } from "lucide-react"
 import { cn } from "@/lib/utils"
+import axios from "axios"
 
 type Category = "all" | "co" | "requests" | "general"
 
@@ -29,90 +30,6 @@ type Message = {
   timestamp: number
   delivered?: boolean
   seen?: boolean
-}
-
-const THREADS: Thread[] = [
-  {
-    id: "t1",
-    name: "Edge Vision Kit • Co‑investors",
-    preview: "We'll share Milestone #2 receipts today.",
-    unread: 2,
-    category: "co",
-    participants: ["You", "Naya", "Rohit", "Ari"],
-    lastActive: "2h",
-    isOnline: true,
-  },
-  {
-    id: "t2",
-    name: "Climate Hardware v1 • Co‑investors",
-    preview: "Intro'd a manufacturing advisor for BOM sanity.",
-    unread: 0,
-    category: "co",
-    participants: ["You", "Mei", "Jon"],
-    lastActive: "1d",
-    isOnline: false,
-  },
-  {
-    id: "t3",
-    name: "Local‑first Creator Analytics • Requests",
-    preview: "Requesting release for Milestone #2; receipts attached.",
-    unread: 1,
-    category: "requests",
-    participants: ["Founders", "You"],
-    lastActive: "3h",
-    isOnline: true,
-  },
-  {
-    id: "t4",
-    name: "Robotics Firmware Co‑pilot • Requests",
-    preview: "NDA draft ready for your review.",
-    unread: 0,
-    category: "requests",
-    participants: ["Founders", "You"],
-    lastActive: "1d",
-    isOnline: false,
-  },
-  {
-    id: "t5",
-    name: "Ops • General",
-    preview: "July billing statement is ready.",
-    unread: 0,
-    category: "general",
-    participants: ["Ops", "You"],
-    lastActive: "2d",
-    isOnline: false,
-  },
-  {
-    id: "t6",
-    name: "Neurotech IDE PM • General",
-    preview: "Prototype video attached—keen on feedback.",
-    unread: 1,
-    category: "general",
-    participants: ["PM", "You"],
-    lastActive: "3d",
-    isOnline: true,
-  },
-]
-
-const SEED_MESSAGES: Record<string, Message[]> = {
-  t1: [
-    { id: "m1", from: "them", text: "We'll share Milestone #2 receipts today.", when: "2h", timestamp: Date.now() - 7200000, delivered: true, seen: true },
-    { id: "m2", from: "you", text: "Great—thank you. I'll review this evening.", when: "1h", timestamp: Date.now() - 3600000, delivered: true, seen: false },
-  ],
-  t2: [
-    { id: "m3", from: "them", text: "Intro'd a manufacturing advisor for BOM sanity.", when: "1d", timestamp: Date.now() - 86400000, delivered: true, seen: true },
-    { id: "m4", from: "you", text: "Perfect—please loop me into that thread.", when: "22h", timestamp: Date.now() - 79200000, delivered: true, seen: true },
-  ],
-  t3: [
-    { id: "m5", from: "them", text: "Requesting release for Milestone #2; receipts attached.", when: "3h", timestamp: Date.now() - 10800000, delivered: true, seen: true },
-    { id: "m6", from: "you", text: "Received—reviewing now.", when: "2h", timestamp: Date.now() - 7200000, delivered: true, seen: false },
-  ],
-  t4: [
-    { id: "m7", from: "them", text: "NDA draft ready for your review.", when: "1d", timestamp: Date.now() - 86400000, delivered: true, seen: true },
-    { id: "m8", from: "you", text: "Send the link—will sign today.", when: "20h", timestamp: Date.now() - 72000000, delivered: true, seen: true },
-  ],
-  t5: [{ id: "m9", from: "them", text: "July billing statement is ready.", when: "2d", timestamp: Date.now() - 172800000, delivered: true, seen: true }],
-  t6: [{ id: "m10", from: "them", text: "Prototype video attached—keen on feedback.", when: "3d", timestamp: Date.now() - 259200000, delivered: true, seen: true }],
 }
 
 function initials(label: string) {
@@ -144,18 +61,88 @@ export default function InvestorChatsPage() {
   const [activeId, setActiveId] = useState<string | null>(null)
   const [text, setText] = useState("")
   const [isTyping, setIsTyping] = useState(false)
-  const [messagesByThread, setMessagesByThread] = useState<Record<string, Message[]>>(
-    () => JSON.parse(JSON.stringify(SEED_MESSAGES)) as Record<string, Message[]>,
-  )
+  const [threads, setThreads] = useState<Thread[]>([])
+  const [messagesByThread, setMessagesByThread] = useState<Record<string, Message[]>>({})
   const [loadedThreads, setLoadedThreads] = useState<Set<string>>(new Set())
+  const [isLoadingThreads, setIsLoadingThreads] = useState(true)
+  const [isLoadingMessages, setIsLoadingMessages] = useState(false)
+
+  // Fetch all threads on component mount
+  useEffect(() => {
+    fetchThreads()
+  }, [])
+
+  // API: Fetch all threads
+  // Backend should return: Thread[]
+  const fetchThreads = async () => {
+    try {
+      setIsLoadingThreads(true)
+      const response = await axios.get("#") // GET /api/threads
+      setThreads(response.data)
+    } catch (error) {
+      console.error("Failed to fetch threads:", error)
+      // Handle error appropriately
+    } finally {
+      setIsLoadingThreads(false)
+    }
+  }
+
+  // API: Fetch messages for a specific thread
+  // Backend should return: Message[]
+  const fetchMessages = async (threadId: string) => {
+    try {
+      setIsLoadingMessages(true)
+      const response = await axios.get("#", { // GET /api/threads/:threadId/messages
+        params: { threadId }
+      })
+      setMessagesByThread(prev => ({
+        ...prev,
+        [threadId]: response.data
+      }))
+      setLoadedThreads(prev => new Set([...prev, threadId]))
+    } catch (error) {
+      console.error("Failed to fetch messages:", error)
+      // Handle error appropriately
+    } finally {
+      setIsLoadingMessages(false)
+    }
+  }
+
+  // API: Send a new message
+  // Backend should return: Message (the created message with server-generated data)
+  const sendMessage = async (threadId: string, messageText: string) => {
+    const response = await axios.post("#", { // POST /api/threads/:threadId/messages
+      threadId,
+      text: messageText,
+      timestamp: Date.now()
+    })
+    return response.data
+  }
+
+  // API: Mark messages as read
+  // Backend should return: success status
+  const markMessagesAsRead = async (threadId: string, messageIds: string[]) => {
+    try {
+      await axios.patch("#", { // PATCH /api/threads/:threadId/messages/read
+        threadId,
+        messageIds
+      })
+    } catch (error) {
+      console.error("Failed to mark messages as read:", error)
+    }
+  }
+
+
 
   const filtered = useMemo(() => {
-    const pool =
-      category === "all" ? THREADS : THREADS.filter((t) => t.category === (category as Exclude<Category, "all">))
+    let pool = threads
+    if (category !== "all") {
+      pool = threads.filter((t) => t.category === (category as Exclude<Category, "all">))
+    }
     if (!query.trim()) return pool
     const q = query.toLowerCase()
     return pool.filter((t) => t.name.toLowerCase().includes(q) || t.preview.toLowerCase().includes(q))
-  }, [category, query])
+  }, [category, query, threads])
 
   useEffect(() => {
     setActiveId((prev) => {
@@ -164,28 +151,21 @@ export default function InvestorChatsPage() {
     })
   }, [filtered])
 
-  // Lazy load messages when thread is selected
-  const loadThread = useCallback((threadId: string) => {
-    if (!loadedThreads.has(threadId)) {
-      setLoadedThreads(prev => new Set([...prev, threadId]))
-      // Simulate loading delay for demonstration
-      setTimeout(() => {
-        setMessagesByThread(prev => ({
-          ...prev,
-          [threadId]: prev[threadId] || []
-        }))
-      }, 100)
-    }
-  }, [loadedThreads])
-
+  // Load messages when thread is selected
   useEffect(() => {
-    if (activeId) {
-      loadThread(activeId)
+    if (activeId && !loadedThreads.has(activeId)) {
+      fetchMessages(activeId)
     }
-  }, [activeId, loadThread])
+  }, [activeId, loadedThreads])
 
-  const activeThread = filtered.find((t) => t.id === activeId) ?? THREADS.find((t) => t.id === activeId) ?? null
-  const msgs = activeThread ? (messagesByThread[activeThread.id] ?? []) : []
+  const activeThread = useMemo(() => 
+    filtered.find((t) => t.id === activeId) ?? threads.find((t) => t.id === activeId) ?? null,
+    [filtered, threads, activeId]
+  )
+  const msgs = useMemo(() => 
+    activeThread ? (messagesByThread[activeThread.id] ?? []) : [],
+    [activeThread, messagesByThread]
+  )
 
   const listRef = useRef<HTMLDivElement | null>(null)
   const inputRef = useRef<HTMLTextAreaElement | null>(null)
@@ -203,20 +183,44 @@ export default function InvestorChatsPage() {
     }
   }, [activeThread])
 
+  // Mark messages as read when viewing a thread
+  useEffect(() => {
+    if (activeThread && msgs.length > 0) {
+      const unreadMessages = msgs
+        .filter(m => m.from === "them" && !m.seen)
+        .map(m => m.id)
+      
+      if (unreadMessages.length > 0) {
+        markMessagesAsRead(activeThread.id, unreadMessages)
+        
+        // Update local state
+        setMessagesByThread(prev => {
+          const next = { ...prev }
+          const messages = next[activeThread.id] || []
+          next[activeThread.id] = messages.map(msg => 
+            unreadMessages.includes(msg.id) ? { ...msg, seen: true } : msg
+          )
+          return next
+        })
+      }
+    }
+  }, [activeThread, msgs])
+
   const showOnlyListOnMobile = !activeThread
   const showOnlyChatOnMobile = !!activeThread
 
-  const generateMessageId = () => `m_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
-
-  function onSend(e: React.FormEvent) {
+  async function onSend(e: React.FormEvent) {
     e.preventDefault()
     if (!activeThread || text.trim().length === 0) return
     
-    const messageId = generateMessageId()
-    const newMsg: Message = { 
-      id: messageId,
+    const messageText = text.trim()
+    const tempId = `temp_${Date.now()}`
+    
+    // Optimistic update
+    const optimisticMsg: Message = { 
+      id: tempId,
       from: "you", 
-      text: text.trim(), 
+      text: messageText, 
       when: "now", 
       timestamp: Date.now(),
       delivered: false,
@@ -225,59 +229,37 @@ export default function InvestorChatsPage() {
     
     setMessagesByThread((prev) => {
       const next = { ...prev }
-      next[activeThread.id] = [...(next[activeThread.id] ?? []), newMsg]
+      next[activeThread.id] = [...(next[activeThread.id] ?? []), optimisticMsg]
       return next
     })
     setText("")
-    setIsTyping(true)
 
-    // Simulate message delivery
-    setTimeout(() => {
+    try {
+      // Send message to backend
+      const serverMessage = await sendMessage(activeThread.id, messageText)
+      
+      // Replace optimistic message with server response
       setMessagesByThread((prev) => {
         const next = { ...prev }
         const messages = next[activeThread.id] || []
-        const updatedMessages = messages.map(msg => 
-          msg.id === messageId ? { ...msg, delivered: true } : msg
+        next[activeThread.id] = messages.map(msg => 
+          msg.id === tempId ? serverMessage : msg
         )
-        next[activeThread.id] = updatedMessages
         return next
       })
-    }, 500)
 
-    // Simulate response
-    setTimeout(() => {
-      setIsTyping(false)
-      const responseId = generateMessageId()
+      // Update thread list to reflect new preview
+      fetchThreads()
+      
+    } catch {
+      // Remove optimistic message on error
       setMessagesByThread((prev) => {
         const next = { ...prev }
-        next[activeThread.id] = [
-          ...(next[activeThread.id] ?? []),
-          { 
-            id: responseId,
-            from: "them", 
-            text: "Got it — will reply shortly.", 
-            when: "now", 
-            timestamp: Date.now(),
-            delivered: true,
-            seen: false
-          },
-        ]
+        next[activeThread.id] = (next[activeThread.id] ?? []).filter(m => m.id !== tempId)
         return next
       })
-      
-      // Mark as seen after a short delay
-      setTimeout(() => {
-        setMessagesByThread((prev) => {
-          const next = { ...prev }
-          const messages = next[activeThread.id] || []
-          const updatedMessages = messages.map(msg => 
-            msg.id === messageId ? { ...msg, seen: true } : msg
-          )
-          next[activeThread.id] = updatedMessages
-          return next
-        })
-      }, 1000)
-    }, 1200)
+      console.error("Failed to send message")
+    }
   }
 
   // Handle typing indicator
@@ -288,6 +270,27 @@ export default function InvestorChatsPage() {
     }
     return () => clearTimeout(timeout)
   }, [text])
+
+  // API: Listen for real-time typing indicators
+  // Backend can use WebSocket or SSE for this
+  // Example with polling (replace with WebSocket):
+  useEffect(() => {
+    if (!activeThread) return
+    
+    const checkTypingStatus = async () => {
+      try {
+        const response = await axios.get("#", { // GET /api/threads/:threadId/typing
+          params: { threadId: activeThread.id }
+        })
+        setIsTyping(response.data.isTyping)
+      } catch (error) {
+        console.error("Failed to check typing status:", error)
+      }
+    }
+
+    const interval = setInterval(checkTypingStatus, 2000)
+    return () => clearInterval(interval)
+  }, [activeThread])
 
   return (
     <div className="mx-auto w-full max-w-[1200px]">
@@ -319,13 +322,21 @@ export default function InvestorChatsPage() {
             </div>
 
             <div className="space-y-0.5">
-              {filtered.length === 0 && (
+              {isLoadingThreads && (
+                <div className="p-4 text-center">
+                  <div className="flex items-center justify-center gap-2 text-sm text-white/60">
+                    <div className="animate-spin size-4 border-2 border-white/20 border-t-white/60 rounded-full" />
+                    Loading conversations...
+                  </div>
+                </div>
+              )}
+              {!isLoadingThreads && filtered.length === 0 && (
                 <div className="p-4 text-center">
                   <div className="text-sm text-white/60">No conversations found</div>
                   <div className="text-xs text-white/40 mt-1">Try adjusting your search or filter</div>
                 </div>
               )}
-              {filtered.map((t) => {
+              {!isLoadingThreads && filtered.map((t) => {
                 const active = t.id === activeId
                 return (
                   <button
@@ -452,11 +463,11 @@ export default function InvestorChatsPage() {
                 <div className="grid h-full place-items-center text-center">
                   <div>
                     <div className="text-sm text-white/60 mb-2">Choose a conversation to start</div>
-                    <div className="text-xs text-white/40">Select from {THREADS.length} available conversations</div>
+                    <div className="text-xs text-white/40">Select from {threads.length} available conversations</div>
                   </div>
                 </div>
               )}
-              {activeThread && !loadedThreads.has(activeThread.id) && (
+              {activeThread && isLoadingMessages && (
                 <div className="grid h-full place-items-center">
                   <div className="flex items-center gap-2 text-sm text-white/60">
                     <div className="animate-spin size-4 border-2 border-white/20 border-t-white/60 rounded-full" />
@@ -464,7 +475,7 @@ export default function InvestorChatsPage() {
                   </div>
                 </div>
               )}
-              {activeThread && loadedThreads.has(activeThread.id) && msgs.map((m, i) => {
+              {activeThread && !isLoadingMessages && msgs.map((m, i) => {
                 const isYou = m.from === "you"
                 const showDeliveryStatus = isYou && i === msgs.length - 1
                 return (

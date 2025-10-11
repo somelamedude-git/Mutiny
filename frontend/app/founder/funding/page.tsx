@@ -26,6 +26,58 @@ import {
 import { NewCampaignModal } from "@/components/new-campaign-modal"
 import { FundUsageModal } from "@/components/fund-usage-modal"
 
+// Types
+type CampaignStatus = "active" | "draft" | "completed"
+type CampaignStage = "concept" | "prototype" | "mvp" | "launched"
+type UsageStatus = "approved" | "pending" | "rejected"
+
+interface Milestone {
+  title: string
+  amount: number
+  completed: boolean
+}
+
+interface FundUsage {
+  id: number
+  category: string
+  amount: number
+  description: string
+  date: string
+  vendor: string
+  status: UsageStatus
+  receipts: string[]
+  proofImages: string[]
+}
+
+interface Campaign {
+  id: number
+  title: string
+  description: string
+  goal: number
+  raised: number
+  backers: number
+  daysLeft: number
+  status: CampaignStatus
+  stage: CampaignStage
+  tags: string[]
+  milestones: Milestone[]
+  fundUsage: FundUsage[]
+}
+
+interface NewCampaignData {
+  ideaName: string
+  description: string
+  fundingGoal: string
+  duration: string
+  status: CampaignStatus
+  stage: CampaignStage
+  tags: string[]
+  milestones: Array<{
+    title: string
+    amount: string
+  }>
+}
+
 export default function CommunityFundingPage() {
   const [searchQuery, setSearchQuery] = useState("")
   const [showNewCampaign, setShowNewCampaign] = useState(false)
@@ -34,8 +86,8 @@ export default function CommunityFundingPage() {
   const [showReleaseModal, setShowReleaseModal] = useState(false)
   const [showFundUsageModal, setShowFundUsageModal] = useState(false)
   const [showUsageHistoryModal, setShowUsageHistoryModal] = useState(false)
-  const [selectedCampaign, setSelectedCampaign] = useState<any>(null)
-  const [campaigns, setCampaigns] = useState([
+  const [selectedCampaign, setSelectedCampaign] = useState<Campaign | null>(null)
+  const [campaigns, setCampaigns] = useState<Campaign[]>([
     {
       id: 1,
       title: "AI-Powered Code Assistant",
@@ -172,8 +224,8 @@ export default function CommunityFundingPage() {
     },
   ])
 
-  const handleCreateCampaign = (campaignData: any) => {
-    const newCampaign = {
+  const handleCreateCampaign = (campaignData: NewCampaignData) => {
+    const newCampaign: Campaign = {
       id: campaigns.length + 1,
       title: campaignData.ideaName,
       description: campaignData.description,
@@ -184,7 +236,7 @@ export default function CommunityFundingPage() {
       status: campaignData.status,
       stage: campaignData.stage,
       tags: campaignData.tags,
-      milestones: campaignData.milestones.map((m: any) => ({
+      milestones: campaignData.milestones.map((m) => ({
         title: m.title,
         amount: Number.parseInt(m.amount) || 0,
         completed: false,
@@ -194,44 +246,44 @@ export default function CommunityFundingPage() {
     setCampaigns([newCampaign, ...campaigns])
   }
 
-  const handleAddFundUsage = (usage: any) => {
+  const handleAddFundUsage = (usage: FundUsage) => {
     if (selectedCampaign) {
       const updatedCampaigns = campaigns.map((campaign) =>
         campaign.id === selectedCampaign.id
-          ? { ...campaign, fundUsage: [...(campaign.fundUsage || []), usage] }
+          ? { ...campaign, fundUsage: [...campaign.fundUsage, usage] }
           : campaign,
       )
       setCampaigns(updatedCampaigns)
-      setSelectedCampaign({ ...selectedCampaign, fundUsage: [...(selectedCampaign.fundUsage || []), usage] })
+      setSelectedCampaign({ ...selectedCampaign, fundUsage: [...selectedCampaign.fundUsage, usage] })
     }
   }
 
-  const handleViewCampaign = (campaign: any) => {
+  const handleViewCampaign = (campaign: Campaign) => {
     setSelectedCampaign(campaign)
     setShowViewModal(true)
   }
 
-  const handleEditCampaign = (campaign: any) => {
+  const handleEditCampaign = (campaign: Campaign) => {
     setSelectedCampaign(campaign)
     setShowEditModal(true)
   }
 
-  const handleRequestRelease = (campaign: any) => {
+  const handleRequestRelease = (campaign: Campaign) => {
     setSelectedCampaign(campaign)
     setShowReleaseModal(true)
   }
 
-  const handleReportUsage = (campaign: any) => {
+  const handleReportUsage = (campaign: Campaign) => {
     setSelectedCampaign(campaign)
     setShowFundUsageModal(true)
   }
 
-  const handleViewUsageHistory = (campaign: any) => {
+  const handleViewUsageHistory = (campaign: Campaign) => {
     setSelectedCampaign(campaign)
     setShowUsageHistoryModal(true)
   }
 
-  const getStatusColor = (status: string) => {
+  const getStatusColor = (status: CampaignStatus): string => {
     switch (status) {
       case "active":
         return "bg-emerald-500/10 text-emerald-300 border-emerald-500/20"
@@ -244,7 +296,7 @@ export default function CommunityFundingPage() {
     }
   }
 
-  const getStageColor = (stage: string) => {
+  const getStageColor = (stage: CampaignStage): string => {
     switch (stage) {
       case "concept":
         return "bg-purple-500/10 text-purple-300 border-purple-500/20"
@@ -259,7 +311,7 @@ export default function CommunityFundingPage() {
     }
   }
 
-  const getUsageStatusColor = (status: string) => {
+  const getUsageStatusColor = (status: UsageStatus): string => {
     switch (status) {
       case "approved":
         return "bg-emerald-500/10 text-emerald-300 border-emerald-500/20"
@@ -279,15 +331,15 @@ export default function CommunityFundingPage() {
       campaign.tags.some((tag) => tag.toLowerCase().includes(searchQuery.toLowerCase())),
   )
 
-  const getTotalUsed = (campaign: any) => {
-    return (campaign.fundUsage || []).reduce((sum: number, usage: any) => sum + usage.amount, 0)
+  const getTotalUsed = (campaign: Campaign): number => {
+    return campaign.fundUsage.reduce((sum, usage) => sum + usage.amount, 0)
   }
 
-  const getTransparencyScore = (campaign: any) => {
+  const getTransparencyScore = (campaign: Campaign): number => {
     const totalUsed = getTotalUsed(campaign)
-    const approvedUsage = (campaign.fundUsage || []).filter((u: any) => u.status === "approved")
+    const approvedUsage = campaign.fundUsage.filter((u) => u.status === "approved")
     if (totalUsed === 0) return 100
-    return Math.round((approvedUsage.reduce((sum: number, u: any) => sum + u.amount, 0) / totalUsed) * 100)
+    return Math.round((approvedUsage.reduce((sum, u) => sum + u.amount, 0) / totalUsed) * 100)
   }
 
   return (
@@ -406,7 +458,7 @@ export default function CommunityFundingPage() {
                     Report Usage
                   </Button>
                 )}
-                {(campaign.fundUsage || []).length > 0 && (
+                {campaign.fundUsage.length > 0 && (
                   <Button
                     variant="outline"
                     size="sm"
@@ -532,7 +584,7 @@ export default function CommunityFundingPage() {
               </div>
 
               <div className="space-y-3">
-                {(selectedCampaign.fundUsage || []).map((usage: any) => (
+                {selectedCampaign.fundUsage.map((usage) => (
                   <div key={usage.id} className="p-4 border border-[#1a1b1e] rounded-lg bg-[#0f1012]">
                     <div className="flex items-start justify-between mb-3">
                       <div className="flex-1">
@@ -563,16 +615,16 @@ export default function CommunityFundingPage() {
                       </div>
                     </div>
 
-                    {(usage.receipts?.length > 0 || usage.proofImages?.length > 0) && (
+                    {(usage.receipts.length > 0 || usage.proofImages.length > 0) && (
                       <div className="mt-3 pt-3 border-t border-[#1a1b1e]">
                         <div className="flex items-center gap-4">
-                          {usage.receipts?.length > 0 && (
+                          {usage.receipts.length > 0 && (
                             <div className="flex items-center gap-2">
                               <Receipt className="h-4 w-4 text-green-400" />
                               <span className="text-sm text-white/60">{usage.receipts.length} receipt(s)</span>
                             </div>
                           )}
-                          {usage.proofImages?.length > 0 && (
+                          {usage.proofImages.length > 0 && (
                             <div className="flex items-center gap-2">
                               <FileText className="h-4 w-4 text-blue-400" />
                               <span className="text-sm text-white/60">{usage.proofImages.length} proof image(s)</span>
@@ -624,7 +676,7 @@ export default function CommunityFundingPage() {
               <div>
                 <h3 className="font-medium mb-3">Milestones</h3>
                 <div className="space-y-2">
-                  {selectedCampaign.milestones.map((milestone: any, index: number) => (
+                  {selectedCampaign.milestones.map((milestone, index) => (
                     <div key={index} className="flex items-center justify-between p-3 bg-[#0f1012] rounded-lg">
                       <div className="flex items-center gap-3">
                         <CheckCircle
