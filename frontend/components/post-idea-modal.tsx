@@ -22,32 +22,51 @@ import {
 } from "@/components/ui/alert-dialog"
 import { Plus, X, Trash2 } from "lucide-react"
 
-interface PostIdeaModalProps {
-  trigger?: React.ReactNode
-  isOpen?: boolean
-  onClose?: () => void
-  onSubmit: (data: IdeaFormData) => void
-  onDelete?: (id: string) => void
-  editingIdea?: any
-}
+// Type Definitions
+type Stage = "concept" | "prototype" | "mvp" | "launched"
 
 interface IdeaFormData {
   title: string
   description: string
-  stage: string
+  stage: Stage
   lookingFor: string[]
   tags: string[]
   isDraft: boolean
 }
 
-const STAGE_OPTIONS = [
+interface Idea {
+  id: string
+  title: string
+  description?: string
+  desc?: string
+  stage: Stage
+  lookingFor?: string[]
+  tags: string[]
+  isDraft?: boolean
+}
+
+interface PostIdeaModalProps {
+  trigger?: React.ReactNode
+  isOpen?: boolean
+  onClose?: () => void
+  onSubmit: (data: IdeaFormData) => void
+  onDelete?: () => void
+  editingIdea?: Idea | null
+}
+
+interface StageOption {
+  value: Stage
+  label: string
+}
+
+const STAGE_OPTIONS: StageOption[] = [
   { value: "concept", label: "Concept" },
   { value: "prototype", label: "Prototype" },
   { value: "mvp", label: "MVP" },
   { value: "launched", label: "Launched" },
 ]
 
-const SUGGESTED_ROLES = [
+const SUGGESTED_ROLES: readonly string[] = [
   "Co-founder",
   "CTO",
   "Frontend Developer",
@@ -69,9 +88,9 @@ const SUGGESTED_ROLES = [
   "Advisor",
   "Mentor",
   "Investor",
-]
+] as const
 
-const SUGGESTED_TAGS = [
+const SUGGESTED_TAGS: readonly string[] = [
   "AI/ML",
   "Web3",
   "Blockchain",
@@ -100,7 +119,7 @@ const SUGGESTED_TAGS = [
   "Privacy",
   "Security",
   "Open Source",
-]
+] as const
 
 export function PostIdeaModal({
   trigger,
@@ -148,7 +167,7 @@ export function PostIdeaModal({
     }
   }, [editingIdea])
 
-  const handleOpenChange = (open: boolean) => {
+  const handleOpenChange = (open: boolean): void => {
     if (controlledOpen !== undefined) {
       if (!open && onClose) onClose()
     } else {
@@ -156,7 +175,7 @@ export function PostIdeaModal({
     }
   }
 
-  const handleSubmit = (isDraft: boolean) => {
+  const handleSubmit = (isDraft: boolean): void => {
     if (!formData.title.trim() || !formData.description.trim()) return
 
     onSubmit({
@@ -177,15 +196,15 @@ export function PostIdeaModal({
     handleOpenChange(false)
   }
 
-  const handleDelete = () => {
+  const handleDelete = (): void => {
     if (editingIdea && onDelete) {
-      onDelete(editingIdea.id)
+      onDelete()
       setShowDeleteDialog(false)
       handleOpenChange(false)
     }
   }
 
-  const addRole = (role: string) => {
+  const addRole = (role: string): void => {
     if (role.trim() && !formData.lookingFor.includes(role.trim())) {
       setFormData((prev) => ({
         ...prev,
@@ -195,14 +214,14 @@ export function PostIdeaModal({
     setNewRole("")
   }
 
-  const removeRole = (role: string) => {
+  const removeRole = (role: string): void => {
     setFormData((prev) => ({
       ...prev,
       lookingFor: prev.lookingFor.filter((r) => r !== role),
     }))
   }
 
-  const addTag = (tag: string) => {
+  const addTag = (tag: string): void => {
     if (tag.trim() && !formData.tags.includes(tag.trim())) {
       setFormData((prev) => ({
         ...prev,
@@ -212,14 +231,14 @@ export function PostIdeaModal({
     setNewTag("")
   }
 
-  const removeTag = (tag: string) => {
+  const removeTag = (tag: string): void => {
     setFormData((prev) => ({
       ...prev,
       tags: prev.tags.filter((t) => t !== tag),
     }))
   }
 
-  const handleKeyPress = (e: React.KeyboardEvent, action: () => void) => {
+  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>, action: () => void): void => {
     if (e.key === "Enter") {
       e.preventDefault()
       action()
@@ -285,7 +304,7 @@ export function PostIdeaModal({
               <Label>Current Stage</Label>
               <Select
                 value={formData.stage}
-                onValueChange={(value) => setFormData((prev) => ({ ...prev, stage: value }))}
+                onValueChange={(value: Stage) => setFormData((prev) => ({ ...prev, stage: value }))}
               >
                 <SelectTrigger className="bg-[#1a1b1e] border-[#2a2b2e] text-white">
                   <SelectValue />
