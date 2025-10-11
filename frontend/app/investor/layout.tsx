@@ -11,30 +11,30 @@ import { Input } from "@/components/ui/input"
 import { Separator } from "@/components/ui/separator"
 import { Search, Plus, Bell } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { AvatarProvider, useAvatar } from "@/components/avatar-context"
+import Image from "next/image";
 
-export default function InvestorLayout({ children }: { children: React.ReactNode }) {
+
+function InvestorLayoutContent({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
   const seg = pathname?.split("/").filter(Boolean)[1]
   const section =
     { search: "Search", investments: "Investments", chats: "Chats", profile: "Profile" }[seg ?? ""] ?? "Overview"
+  
+  const { avatarUrl, userName } = useAvatar()
+
+  // Get initials for fallback
+  const getInitials = (name: string) => {
+    const words = name.trim().split(/\s+/)
+    const first = words[0]?.[0] ?? "A"
+    const last = words[1]?.[0] ?? "R"
+    return (first + last).toUpperCase()
+  }
 
   return (
-
-
-    
-    // Side Menu for investors Page
-
-
-
     <div className="min-h-screen bg-[#0a0a0c]">
       <SidebarProvider>
         <AppInvestorSidebar />
-
-
-
-        {/* Header for all investors  */}
-
-
 
         <SidebarInset className="bg-[#0a0a0c] text-white">
           <Suspense fallback={<div className="p-4">Loading...</div>}>
@@ -71,7 +71,23 @@ export default function InvestorLayout({ children }: { children: React.ReactNode
                   <Bell className="h-4 w-4" />
                   <span className="sr-only">Notifications</span>
                 </Button>
-                <div className="h-8 w-8 rounded-md ring-1 ring-[#1a1b1e] bg-[#101113]" />
+                <Link href="/investor/profile" className="block">
+                  <div className="h-8 w-8 rounded-md ring-1 ring-[#1a1b1e] bg-[#101113] overflow-hidden cursor-pointer hover:ring-white/30 transition-all">
+                    {avatarUrl ? (
+  <Image
+    src={avatarUrl}
+    alt={userName}
+    width={32}
+    height={32}
+    className="h-full w-full object-cover rounded-md"
+  />
+                    ) : (
+                      <div className="h-full w-full flex items-center justify-center text-[10px] font-medium text-white/70">
+                        {getInitials(userName)}
+                      </div>
+                    )}
+                  </div>
+                </Link>
               </div>
             </header>
           </Suspense>
@@ -79,5 +95,13 @@ export default function InvestorLayout({ children }: { children: React.ReactNode
         </SidebarInset>
       </SidebarProvider>
     </div>
+  )
+}
+
+export default function InvestorLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <AvatarProvider>
+      <InvestorLayoutContent>{children}</InvestorLayoutContent>
+    </AvatarProvider>
   )
 }
