@@ -1,414 +1,336 @@
 "use client"
 
-import type React from "react"
-
-import { useState } from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
+import { useState, useEffect } from "react"
+import axios from "axios"
 import { Button } from "@/components/ui/button"
-import { Switch } from "@/components/ui/switch"
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
-import { Building2, Link2, ShieldCheck, Tag, UserRound, Lightbulb } from "lucide-react"
-import { cn } from "@/lib/utils"
+import { Progress } from "@/components/ui/progress"
+import {
+  Pencil,
+  MapPin,
+  Linkedin,
+  Twitter,
+  Globe,
+  Briefcase,
+  GraduationCap,
+  Sparkles,
+  Loader2,
+  AlertTriangle,
+} from "lucide-react"
 
-// Reuse components from investor profile
-import { VerificationBadge } from "@/components/verification-badge"
-import { TrustInspector } from "@/components/trust-inspector"
-import { AvatarUploader } from "@/components/avatar-uploader"
+// API Base URL from environment
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || ""
 
-const SKILLS = ["Hardware", "Software", "AI/ML", "Design", "Marketing", "Operations", "Finance", "Legal"]
-const INTERESTS = [
-  "Climate hardware",
-  "Edge AI",
-  "Local‑first",
-  "Robotics",
-  "Bio tooling",
-  "Privacy",
-  "DePIN",
-  "Creator infra",
-]
+// Types
+interface Experience {
+  role: string
+  company: string
+  duration: string
+  description: string
+}
+
+interface Education {
+  institution: string
+  degree: string
+  duration: string
+}
+
+interface ProfileData {
+  name: string
+  avatarUrl: string
+  headline: string
+  location: string
+  isVerified: boolean
+  about: string
+  socials: {
+    linkedin: string
+    twitter: string
+    website: string
+  }
+  skills: string[]
+  experience: Experience[]
+  education: Education[]
+  interests: string[]
+  profileCompletion: number
+}
+
+// API Service
+const profileAPI = {
+  async getProfile(): Promise<ProfileData> {
+    try {
+      const response = await axios.get(`${API_BASE_URL}/founder/profile`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      })
+      return response.data
+    } catch (error) {
+      console.error("Error fetching profile:", error)
+      throw new Error("Failed to fetch profile data.")
+    }
+  },
+  async updateProfile(data: Partial<ProfileData>): Promise<ProfileData> {
+    try {
+      const response = await axios.put(`${API_BASE_URL}/founder/profile`, data, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+          "Content-Type": "application/json",
+        },
+      })
+      return response.data
+    } catch (error) {
+      console.error("Error updating profile:", error)
+      throw new Error("Failed to update profile data.")
+    }
+  },
+}
 
 export default function FounderProfilePage() {
-  // Basic info
-  const [name, setName] = useState("Alex Chen")
-  const [role, setRole] = useState("Founder & CEO")
-  const [company, setCompany] = useState("Edge Vision Labs")
-  const [location, setLocation] = useState("San Francisco, CA")
-  const [bio, setBio] = useState(
-    "Building the future of edge AI with privacy-first computer vision. Previously led hardware teams at two successful startups.",
-  )
-  const [avatarUrl, setAvatarUrl] = useState<string | null>(null)
+  const [profile, setProfile] = useState<ProfileData | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
-  // Skills and interests
-  const [skills, setSkills] = useState<string[]>(["Hardware", "AI/ML", "Operations"])
-  const [interests, setInterests] = useState<string[]>(["Edge AI", "Robotics", "Privacy"])
+  useEffect(() => {
+    const fetchProfileData = async () => {
+      setIsLoading(true)
+      setError(null)
+      try {
+        const data = await profileAPI.getProfile()
+        setProfile(data)
+      } catch (err) {
+        setError("Could not load your profile. Please refresh the page.")
+        console.error(err)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+    fetchProfileData()
+  }, [])
 
-  // Looking for
-  const [lookingForCofounder, setLookingForCofounder] = useState(true)
-  const [lookingForTeam, setLookingForTeam] = useState(true)
-  const [lookingForFunding, setLookingForFunding] = useState(false)
-  const [cofounderSkills, setCofounderSkills] = useState<string[]>(["Software", "Marketing"])
-
-  // Visibility
-  const [publicProfile, setPublicProfile] = useState(true)
-  const [handle, setHandle] = useState("alexchen")
-  const [links] = useState([
-    { label: "LinkedIn", href: "#" },
-    { label: "GitHub", href: "#" },
-  ])
-
-  // Trust (mocked)
-  const trust = 78
-  const trustBreakdown = { ndas: 2, escrowReleases: 3, receipts: 8, history: 1 }
-
-  function toggleSkill(skill: string) {
-    setSkills((prev) => (prev.includes(skill) ? prev.filter((s) => s !== skill) : [...prev, skill]))
+  const handleEdit = (section: string) => {
+    alert(`Edit ${section} - implement your modal or page navigation here`)
   }
 
-  function toggleInterest(interest: string) {
-    setInterests((prev) => (prev.includes(interest) ? prev.filter((i) => i !== interest) : [...prev, interest]))
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center h-96">
+        <Loader2 className="w-8 h-8 animate-spin text-white/60" />
+      </div>
+    )
   }
 
-  function toggleCofounderSkill(skill: string) {
-    setCofounderSkills((prev) => (prev.includes(skill) ? prev.filter((s) => s !== skill) : [...prev, skill]))
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center h-96 text-center">
+        <AlertTriangle className="w-12 h-12 text-red-400 mb-4" />
+        <h2 className="text-xl font-semibold mb-2">An Error Occurred</h2>
+        <p className="text-white/70">{error}</p>
+      </div>
+    )
   }
 
-  const projects = [
-    { id: "p1", name: "Edge Vision Kit", status: "Active" },
-    { id: "p2", name: "Local‑first Creator Analytics", status: "Seeking funding" },
-    { id: "p3", name: "Climate Hardware Sensors", status: "Draft" },
-  ]
+  if (!profile) return null
 
   return (
-    <div className="mx-auto max-w-[1400px]">
-      {/* Header */}
-      <section className="rounded-xl bg-[#101113] p-5">
-        <div className="grid gap-4 md:grid-cols-[auto_minmax(0,1fr)] lg:grid-cols-[auto_minmax(0,1fr)_360px] md:items-start lg:items-center">
-          {/* Avatar */}
-          <div>
-            <AvatarUploader name={name} src={avatarUrl} onChange={(_, url) => setAvatarUrl(url)} size={80} />
-          </div>
-
-          {/* Name + Verified + Role */}
-          <div className="min-w-0">
-            <div className="flex flex-wrap items-center gap-2 min-w-0">
-              <h1 className="text-xl sm:text-2xl font-semibold tracking-tight break-words">{name}</h1>
-              <VerificationBadge className="shrink-0" />
+    <div className="grid gap-6 md:grid-cols-3">
+      <div className="space-y-6 md:col-span-2">
+        {/* Profile Header */}
+        <Card className="bg-[#101113] border-[#1a1b1e]">
+          <CardContent className="p-6">
+            <div className="flex items-start justify-between">
+              <div className="flex items-center gap-4">
+                <Avatar className="h-20 w-20 border-2 border-white/20">
+                  <AvatarImage src={profile.avatarUrl} alt={`${profile.name} avatar`} />
+                  <AvatarFallback>{profile.name.charAt(0)}</AvatarFallback>
+                </Avatar>
+                <div>
+                  <h1 className="text-2xl font-bold">{profile.name}</h1>
+                  <p className="text-white/80">{profile.headline}</p>
+                  <div className="mt-1 flex items-center gap-2 text-sm text-white/60">
+                    <MapPin className="h-4 w-4" />
+                    <span>{profile.location}</span>
+                  </div>
+                </div>
+              </div>
+              <Button
+                variant="outline"
+                size="icon"
+                className="border-[#1a1b1e] text-white/80 hover:bg-white/10"
+                aria-label="Edit profile header"
+                onClick={() => handleEdit("Profile Header")}
+              >
+                <Pencil className="h-4 w-4" />
+              </Button>
             </div>
-            <p className="mt-1 flex items-center gap-2 text-white/70 text-sm">
-              <Building2 className="h-4 w-4 text-white/60" />
-              <span className="truncate">
-                {role} • {company}
-              </span>
-            </p>
-            <p className="text-white/60 text-sm">{location}</p>
-          </div>
-
-          {/* Trust + Actions */}
-          <div className="flex items-center gap-4 md:col-span-2 lg:col-span-1">
-            <div className="flex-1 lg:flex-none">
-              <TrustInspector trust={trust} baseline={75} breakdown={trustBreakdown} className="w-full max-w-[220px]" />
+            <div className="mt-4 flex items-center justify-between">
+              {profile.isVerified && (
+                <Badge className="bg-blue-500/10 text-blue-300 border-blue-500/20">Verified Founder</Badge>
+              )}
+              <div className="flex items-center gap-2">
+                {profile.socials.linkedin && (
+                  <a href={profile.socials.linkedin} target="_blank" rel="noreferrer">
+                    <Button variant="ghost" size="icon" aria-label="LinkedIn profile">
+                      <Linkedin className="h-5 w-5" />
+                    </Button>
+                  </a>
+                )}
+                {profile.socials.twitter && (
+                  <a href={profile.socials.twitter} target="_blank" rel="noreferrer">
+                    <Button variant="ghost" size="icon" aria-label="Twitter profile">
+                      <Twitter className="h-5 w-5" />
+                    </Button>
+                  </a>
+                )}
+                {profile.socials.website && (
+                  <a href={profile.socials.website} target="_blank" rel="noreferrer">
+                    <Button variant="ghost" size="icon" aria-label="Website">
+                      <Globe className="h-5 w-5" />
+                    </Button>
+                  </a>
+                )}
+              </div>
             </div>
-            <Button className="rounded-md bg-white text-[#0b0b0c] hover:bg-white/90">
-              <ShieldCheck className="mr-2 h-4 w-4" />
-              Request re‑verify
-            </Button>
-          </div>
-        </div>
-      </section>
+          </CardContent>
+        </Card>
 
-      {/* Body */}
-      <div className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1fr)_380px]">
-        {/* Main column */}
-        <div className="min-w-0 space-y-6">
-          {/* Basic info */}
+        {/* About */}
+        {profile.about && (
           <Card className="bg-[#101113] border-[#1a1b1e]">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-base flex items-center gap-2">
-                <UserRound className="h-4 w-4" />
-                Profile
-              </CardTitle>
+            <CardHeader className="flex justify-between items-center">
+              <CardTitle>About</CardTitle>
+              <Button variant="ghost" size="icon" aria-label="Edit about" onClick={() => handleEdit("About")}>
+                <Pencil className="h-4 w-4" />
+              </Button>
             </CardHeader>
-            <CardContent className="grid gap-4 sm:grid-cols-2">
-              <Field label="Name">
-                <Input
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  className="bg-[#0f1012] border-[#1a1b1e]"
-                />
-              </Field>
-              <Field label="Role">
-                <Input
-                  value={role}
-                  onChange={(e) => setRole(e.target.value)}
-                  className="bg-[#0f1012] border-[#1a1b1e]"
-                />
-              </Field>
-              <Field label="Company">
-                <Input
-                  value={company}
-                  onChange={(e) => setCompany(e.target.value)}
-                  className="bg-[#0f1012] border-[#1a1b1e]"
-                />
-              </Field>
-              <Field label="Location">
-                <Input
-                  value={location}
-                  onChange={(e) => setLocation(e.target.value)}
-                  className="bg-[#0f1012] border-[#1a1b1e]"
-                />
-              </Field>
-              <div className="sm:col-span-2">
-                <Field label="Bio">
-                  <Textarea
-                    value={bio}
-                    onChange={(e) => setBio(e.target.value)}
-                    className="min-h-[100px] bg-[#0f1012] border-[#1a1b1e]"
-                  />
-                </Field>
-              </div>
-              <div className="sm:col-span-2">
-                <Button className="w-fit rounded-md bg-white text-[#0b0b0c] hover:bg-white/90">Save profile</Button>
-              </div>
+            <CardContent>
+              <p className="text-white/80">{profile.about}</p>
             </CardContent>
           </Card>
+        )}
 
-          {/* Skills */}
+        {/* Skills */}
+        {profile.skills.length > 0 && (
           <Card className="bg-[#101113] border-[#1a1b1e]">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-base flex items-center gap-2">
-                <Tag className="h-4 w-4" />
-                Skills & Interests
+            <CardHeader className="flex justify-between items-center">
+              <CardTitle>Skills</CardTitle>
+              <Button variant="ghost" size="icon" aria-label="Edit skills" onClick={() => handleEdit("Skills")}>
+                <Pencil className="h-4 w-4" />
+              </Button>
+            </CardHeader>
+            <CardContent className="flex flex-wrap gap-2">
+              {profile.skills.map((skill) => (
+                <Badge key={skill} variant="secondary" className="bg-white/5 border-white/10">
+                  {skill}
+                </Badge>
+              ))}
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Experience */}
+        {profile.experience.length > 0 && (
+          <Card className="bg-[#101113] border-[#1a1b1e]">
+            <CardHeader className="flex justify-between items-center">
+              <CardTitle className="flex items-center gap-2">
+                <Briefcase className="h-5 w-5" /> Experience
               </CardTitle>
+              <Button
+                variant="ghost"
+                size="icon"
+                aria-label="Edit experience"
+                onClick={() => handleEdit("Experience")}
+              >
+                <Pencil className="h-4 w-4" />
+              </Button>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div>
-                <div className="text-sm font-medium mb-2">Your skills</div>
-                <div className="flex flex-wrap gap-2">
-                  {SKILLS.map((skill) => {
-                    const selected = skills.includes(skill)
-                    return (
-                      <button
-                        key={skill}
-                        onClick={() => toggleSkill(skill)}
-                        className={cn(
-                          "text-xs rounded-md px-3 py-1.5 border transition",
-                          selected
-                            ? "border-white/30 bg-white/[0.06]"
-                            : "border-[#1a1b1e] text-white/80 hover:bg-white/[0.03]",
-                        )}
-                        aria-pressed={selected}
-                      >
-                        {skill}
-                      </button>
-                    )
-                  })}
-                </div>
-              </div>
-
-              <div>
-                <div className="text-sm font-medium mb-2">Interests</div>
-                <div className="flex flex-wrap gap-2">
-                  {INTERESTS.map((interest) => {
-                    const selected = interests.includes(interest)
-                    return (
-                      <button
-                        key={interest}
-                        onClick={() => toggleInterest(interest)}
-                        className={cn(
-                          "text-xs rounded-md px-3 py-1.5 border transition",
-                          selected
-                            ? "border-white/30 bg-white/[0.06]"
-                            : "border-[#1a1b1e] text-white/80 hover:bg-white/[0.03]",
-                        )}
-                        aria-pressed={selected}
-                      >
-                        {interest}
-                      </button>
-                    )
-                  })}
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Looking for */}
-          <Card className="bg-[#101113] border-[#1a1b1e]">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-base flex items-center gap-2">
-                <Lightbulb className="h-4 w-4" />
-                What you're looking for
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3 text-sm">
-              <RowSwitch
-                label="Co-founder"
-                desc="Open to finding a complementary co-founder."
-                checked={lookingForCofounder}
-                onCheckedChange={setLookingForCofounder}
-              />
-              <RowSwitch
-                label="Team members"
-                desc="Actively hiring for your team."
-                checked={lookingForTeam}
-                onCheckedChange={setLookingForTeam}
-              />
-              <RowSwitch
-                label="Funding"
-                desc="Seeking investment or community funding."
-                checked={lookingForFunding}
-                onCheckedChange={setLookingForFunding}
-              />
-
-              {lookingForCofounder && (
-                <div className="grid gap-2 pt-2">
-                  <div className="text-sm font-medium">Co-founder skills needed</div>
-                  <div className="flex flex-wrap gap-2">
-                    {SKILLS.map((skill) => {
-                      const selected = cofounderSkills.includes(skill)
-                      return (
-                        <button
-                          key={skill}
-                          onClick={() => toggleCofounderSkill(skill)}
-                          className={cn(
-                            "text-xs rounded-md px-3 py-1.5 border transition",
-                            selected
-                              ? "border-white/30 bg-white/[0.06]"
-                              : "border-[#1a1b1e] text-white/80 hover:bg-white/[0.03]",
-                          )}
-                          aria-pressed={selected}
-                        >
-                          {skill}
-                        </button>
-                      )
-                    })}
-                  </div>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Right rail */}
-        <aside className="space-y-6">
-          {/* Visibility & links */}
-          <Card className="bg-[#101113] border-[#1a1b1e]">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-base flex items-center gap-2">
-                <Link2 className="h-4 w-4" />
-                Visibility & links
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="grid gap-3 text-sm">
-              <RowSwitch
-                label="Public profile"
-                desc="Share a linkable founder profile."
-                checked={publicProfile}
-                onCheckedChange={setPublicProfile}
-              />
-              <div className="grid gap-2">
-                <div className="text-xs text-white/60">Handle</div>
-                <div className="flex items-center gap-2">
-                  <span className="text-white/60">@</span>
-                  <Input
-                    value={handle}
-                    onChange={(e) => setHandle(e.target.value)}
-                    className="h-8 bg-[#0f1012] border-[#1a1b1e]"
-                  />
-                </div>
-                <div className="text-xs text-white/60">
-                  Profile URL: <span className="text-white">mutiny.to/{handle}</span>
-                </div>
-              </div>
-              <div className="grid gap-2">
-                <div className="text-xs text-white/60">Linked accounts</div>
-                <div className="flex flex-wrap gap-2">
-                  {links.map((l, i) => (
-                    <a
-                      key={i}
-                      href={l.href}
-                      className="inline-flex items-center gap-2 rounded-md border border-white/10 bg-[#0f1012] px-2.5 py-1.5 text-xs hover:bg-white/[0.04]"
-                    >
-                      <span className="inline-block h-1.5 w-1.5 rounded-full bg-white/60" />
-                      {l.label}
-                    </a>
-                  ))}
-                  <button className="inline-flex items-center gap-1 rounded-md border border-white/10 bg-[#0f1012] px-2 py-1 text-[11px] text-white/80 hover:bg-white/[0.04]">
-                    Connect…
-                  </button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Projects */}
-          <Card className="bg-[#101113] border-[#1a1b1e]">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-base">Your projects</CardTitle>
-            </CardHeader>
-            <CardContent className="grid gap-2">
-              {projects.map((p) => (
-                <div key={p.id} className="rounded-md border border-white/10 bg-[#0f1012] px-3 py-2">
-                  <div className="flex items-center justify-between gap-2">
-                    <div className="text-sm font-medium">{p.name}</div>
-                    <Badge variant="secondary" className="bg-white/[0.04] text-white border-white/10 text-xs">
-                      {p.status}
-                    </Badge>
-                  </div>
+              {profile.experience.map((exp, i) => (
+                <div key={i}>
+                  <h3 className="font-semibold">{exp.role}</h3>
+                  <p className="text-sm text-white/80">{exp.company}</p>
+                  <p className="text-xs text-white/60">{exp.duration}</p>
+                  <p className="mt-1 text-sm text-white/70">{exp.description}</p>
                 </div>
               ))}
-              <div className="text-[11px] text-white/60">Visible to potential co-founders and investors.</div>
             </CardContent>
           </Card>
+        )}
 
-          {/* Guidance */}
+        {/* Education */}
+        {profile.education.length > 0 && (
           <Card className="bg-[#101113] border-[#1a1b1e]">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-base">Tips</CardTitle>
+            <CardHeader className="flex justify-between items-center">
+              <CardTitle className="flex items-center gap-2">
+                <GraduationCap className="h-5 w-5" /> Education
+              </CardTitle>
+              <Button
+                variant="ghost"
+                size="icon"
+                aria-label="Edit education"
+                onClick={() => handleEdit("Education")}
+              >
+                <Pencil className="h-4 w-4" />
+              </Button>
             </CardHeader>
-            <CardContent className="space-y-2 text-sm">
-              <div className="rounded-md border border-white/10 bg-[#0f1012] px-3 py-2">
-                Complete profiles get 3x more co-founder matches.
-              </div>
-              <div className="rounded-md border border-white/10 bg-[#0f1012] px-3 py-2">
-                Trust grows with project transparency and milestone completion.
-              </div>
+            <CardContent className="space-y-4">
+              {profile.education.map((edu, i) => (
+                <div key={i}>
+                  <h3 className="font-semibold">{edu.institution}</h3>
+                  <p className="text-sm text-white/80">{edu.degree}</p>
+                  <p className="text-xs text-white/60">{edu.duration}</p>
+                </div>
+              ))}
             </CardContent>
           </Card>
-        </aside>
-      </div>
-    </div>
-  )
-}
+        )}
 
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <div className="grid gap-2">
-      <label className="text-xs text-white/60">{label}</label>
-      {children}
-    </div>
-  )
-}
-
-function RowSwitch({
-  label,
-  desc,
-  checked,
-  onCheckedChange,
-}: {
-  label: string
-  desc?: string
-  checked: boolean
-  onCheckedChange: (v: boolean) => void
-}) {
-  return (
-    <div className="flex items-start justify-between gap-3 rounded-md border border-[#1a1b1e] bg-[#0f1012] p-3">
-      <div className="min-w-0">
-        <div className="font-medium">{label}</div>
-        {desc && <div className="text-xs text-white/60">{desc}</div>}
+        {/* Interests */}
+        {profile.interests.length > 0 && (
+          <Card className="bg-[#101113] border-[#1a1b1e]">
+            <CardHeader className="flex justify-between items-center">
+              <CardTitle className="flex items-center gap-2">
+                <Sparkles className="h-5 w-5" /> Interests
+              </CardTitle>
+              <Button
+                variant="ghost"
+                size="icon"
+                aria-label="Edit interests"
+                onClick={() => handleEdit("Interests")}
+              >
+                <Pencil className="h-4 w-4" />
+              </Button>
+            </CardHeader>
+            <CardContent className="flex flex-wrap gap-2">
+              {profile.interests.map((interest) => (
+                <Badge key={interest} variant="secondary" className="bg-white/5 border-white/10">
+                  {interest}
+                </Badge>
+              ))}
+            </CardContent>
+          </Card>
+        )}
       </div>
-      <Switch checked={checked} onCheckedChange={onCheckedChange} aria-label={label} />
+
+      {/* Profile Completion */}
+      <div className="space-y-6 md:col-span-1">
+        <Card className="bg-[#101113] border-[#1a1b1e]">
+          <CardHeader>
+            <CardTitle>Profile Completion</CardTitle>
+            <CardDescription>Complete your profile to attract more investors.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center gap-3">
+              <Progress value={profile.profileCompletion} className="w-full" />
+              <span className="font-semibold">{profile.profileCompletion}%</span>
+            </div>
+            <Button className="mt-4 w-full bg-white text-black hover:bg-white/90">
+              Complete Profile
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   )
 }
