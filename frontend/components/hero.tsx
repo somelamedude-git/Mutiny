@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button"
 import { AIduoDemo } from "./ai-duo-demo"
-import { WaitlistForm } from "./waitlist-form"
+import WaitlistForm from "./waitlist-form"
 
 export function Hero() {
   return (

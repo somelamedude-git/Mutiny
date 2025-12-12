@@ -1,10 +1,165 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { ConciergeRail } from "@/components/concierge-rail"
-import { Search, ArrowUpRight } from "lucide-react"
+// frontend/app/investor/page.tsx
+'use client';
+
+import { useEffect, useState } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ConciergeRail } from "@/components/concierge-rail";
+import { Search } from "lucide-react";
 import Link from 'next/link';
+import axios from 'axios';
+
+// TYPES 
+
+
+interface KpiData {
+  availableBalance: string;
+  committedCapital: string;
+  activeProjects: number;
+  unreadChats: number;
+}
+
+interface PipelineProject {
+  id: string;
+  name: string;
+  stage: 'assess' | 'match' | 'mobilize';
+}
+
+interface Activity {
+  id: string;
+  description: string;
+  timestamp: string;
+}
+
+interface InvestorDashboardData {
+  kpis: KpiData;
+  pipeline: PipelineProject[];
+  recentActivity: Activity[];
+}
+
+
+// API CONFIGURATION 
+
+
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:3001/api';
+
+const API_ENDPOINTS = {
+  DASHBOARD: `${API_BASE_URL}/investor/dashboard`,
+  SEARCH: `${API_BASE_URL}/investor/search`,
+
+};
+
+// API SERVICE
+
+const investorApi = {
+
+  getDashboardData: async (): Promise<InvestorDashboardData> => {
+    try {
+      const response = await axios.get(API_ENDPOINTS.DASHBOARD, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
+         
+        },
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Failed to fetch dashboard data:', error);
+      throw error;
+    }
+  },
+
+  // Search functionality
+  search: async (query: string) => {
+    try {
+      const response = await axios.get(API_ENDPOINTS.SEARCH, {
+        params: { q: query },
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
+        },
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Search failed:', error);
+      throw error;
+    }
+  },
+};
+
+
+// MOCK DATA 
+
+
+const MOCK_DATA: InvestorDashboardData = {
+  kpis: {
+    availableBalance: "$128,400",
+    committedCapital: "$86,200",
+    activeProjects: 9,
+    unreadChats: 5,
+  },
+  pipeline: [
+    { id: '1', name: "Local‑first notes app", stage: 'assess' },
+    { id: '2', name: "DePIN sensor mesh", stage: 'assess' },
+    { id: '3', name: "Neurotech IDE", stage: 'assess' },
+    { id: '4', name: "Edge AI vision kit", stage: 'match' },
+    { id: '5', name: "Climate hardware v1", stage: 'match' },
+    { id: '6', name: "Creator infra sync", stage: 'mobilize' },
+    { id: '7', name: "Robotics firmware co‑pilot", stage: 'mobilize' },
+  ],
+  recentActivity: [
+    { id: '1', description: "Milestone #2 accepted • Edge AI vision kit", timestamp: "2h ago" },
+    { id: '2', description: "New project suggested in Climate • Hardware founders", timestamp: "1d ago" },
+    { id: '3', description: "Funds released • $4,000 to Engineering", timestamp: "3d ago" },
+    { id: '4', description: "Signed mutual NDA • Neurotech IDE", timestamp: "5d ago" },
+  ],
+};
+
+// MAIN COMPONENT
+
 
 export default function InvestorOverviewPage() {
+  const [dashboardData, setDashboardData] = useState<InvestorDashboardData>(MOCK_DATA);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  // Fetch data on mount
+  useEffect(() => {
+    fetchDashboardData();
+  }, []);
+
+  const fetchDashboardData = async () => {
+    setLoading(true);
+    setError(null);
+    
+    try {
+      // TODO: Backend dev - Switch USE_MOCK_DATA to false when API is ready
+      const USE_MOCK_DATA = true;
+      
+      if (USE_MOCK_DATA) {
+        // Simulate API delay
+        await new Promise(resolve => setTimeout(resolve, 500));
+        setDashboardData(MOCK_DATA);
+      } else {
+        const data = await investorApi.getDashboardData();
+        setDashboardData(data);
+      }
+    } catch (err) {
+      setError('Failed to load dashboard data');
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+
+  const pipelineByStage = {
+    assess: dashboardData.pipeline.filter(p => p.stage === 'assess'),
+    match: dashboardData.pipeline.filter(p => p.stage === 'match'),
+    mobilize: dashboardData.pipeline.filter(p => p.stage === 'mobilize'),
+  };
+
+  if (loading && !dashboardData) {
+    return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
+  }
+
   return (
     <div className="mx-auto max-w-[1400px]">
       <div className="flex gap-6">
@@ -12,12 +167,18 @@ export default function InvestorOverviewPage() {
         <div className="min-w-0 flex-1 space-y-6">
           <PageHeader />
 
+          {error && (
+            <div className="rounded-lg border border-red-500/20 bg-red-500/10 p-4 text-red-500">
+              {error}
+            </div>
+          )}
+
           {/* KPIs minimal */}
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            <Kpi title="Available balance" value="$128,400" />
-            <Kpi title="Committed capital" value="$86,200" />
-            <Kpi title="Active projects" value="9" />
-            <Kpi title="Unread chats" value="5" />
+            <Kpi title="Available balance" value={dashboardData.kpis.availableBalance} />
+            <Kpi title="Committed capital" value={dashboardData.kpis.committedCapital} />
+            <Kpi title="Active projects" value={dashboardData.kpis.activeProjects.toString()} />
+            <Kpi title="Unread chats" value={dashboardData.kpis.unreadChats.toString()} />
           </div>
 
           {/* Notion-like blocks */}
@@ -28,9 +189,18 @@ export default function InvestorOverviewPage() {
               </CardHeader>
               <CardContent>
                 <div className="grid gap-3 sm:grid-cols-3">
-                  <Column title="Assess" items={["Local‑first notes app", "DePIN sensor mesh", "Neurotech IDE"]} />
-                  <Column title="Match" items={["Edge AI vision kit", "Climate hardware v1"]} />
-                  <Column title="Mobilize" items={["Creator infra sync", "Robotics firmware co‑pilot"]} />
+                  <Column 
+                    title="Assess" 
+                    items={pipelineByStage.assess.map(p => p.name)} 
+                  />
+                  <Column 
+                    title="Match" 
+                    items={pipelineByStage.match.map(p => p.name)} 
+                  />
+                  <Column 
+                    title="Mobilize" 
+                    items={pipelineByStage.mobilize.map(p => p.name)} 
+                  />
                 </div>
               </CardContent>
             </Card>
@@ -40,14 +210,7 @@ export default function InvestorOverviewPage() {
                 <CardTitle className="text-base">Discover</CardTitle>
               </CardHeader>
               <CardContent className="grid gap-2">
-                <div className="relative">
-                  <Search className="pointer-events-none absolute left-2 top-1/2 z-10 h-4 w-4 -translate-y-1/2 text-white/40" />
-                  <input
-                    aria-label="Discover input"
-                    placeholder="Search domains, founders…"
-                    className="h-9 w-full rounded-md bg-[#0f1012] border border-[#1a1b1e] pl-8 pr-2 text-sm outline-none placeholder:text-white/40"
-                  />
-                </div>
+                <SearchInput />
                 <div className="flex gap-2">
                   {["Climate", "Edge AI", "Local‑first"].map((t) => (
                     <span
@@ -58,7 +221,6 @@ export default function InvestorOverviewPage() {
                     </span>
                   ))}
                 </div>
-                
               </CardContent>
             </Card>
           </div>
@@ -70,17 +232,12 @@ export default function InvestorOverviewPage() {
             </CardHeader>
             <CardContent>
               <ul className="space-y-2 text-sm">
-                {[
-                  { t: "Milestone #2 accepted • Edge AI vision kit", when: "2h ago" },
-                  { t: "New project suggested in Climate • Hardware founders", when: "1d ago" },
-                  { t: "Funds released • $4,000 to Engineering", when: "3d ago" },
-                  { t: "Signed mutual NDA • Neurotech IDE", when: "5d ago" },
-                ].map((a, i) => (
-                  <li key={i} className="flex items-start gap-3">
+                {dashboardData.recentActivity.map((activity) => (
+                  <li key={activity.id} className="flex items-start gap-3">
                     <span className="mt-2 inline-block h-1.5 w-1.5 rounded-full bg-white/50" />
                     <div>
-                      <div>{a.t}</div>
-                      <div className="text-white/50 text-xs">{a.when}</div>
+                      <div>{activity.description}</div>
+                      <div className="text-white/50 text-xs">{activity.timestamp}</div>
                     </div>
                   </li>
                 ))}
@@ -93,8 +250,12 @@ export default function InvestorOverviewPage() {
         <ConciergeRail />
       </div>
     </div>
-  )
+  );
 }
+
+
+// SUBCOMPONENTS
+
 
 function PageHeader() {
   return (
@@ -108,20 +269,20 @@ function PageHeader() {
           </p>
         </div>
         
-<div className="sm:ml-auto flex items-center gap-2">
-  <Link href="/search" passHref>
-    <button
-      className="rounded-md bg-white text-[#0b0b0c] hover:bg-white/90 flex items-center px-3 py-2"
-      type="button"
-    >
-      <Search className="mr-2 h-4 w-4" />
-      Discover
-    </button>
-  </Link>
-</div>
+        <div className="sm:ml-auto flex items-center gap-2">
+          <Link href="/search" passHref>
+            <button
+              className="rounded-md bg-white text-[#0b0b0c] hover:bg-white/90 flex items-center px-3 py-2"
+              type="button"
+            >
+              <Search className="mr-2 h-4 w-4" />
+              Discover
+            </button>
+          </Link>
+        </div>
       </div>
     </div>
-  )
+  );
 }
 
 function Kpi({ title, value }: { title: string; value: string }) {
@@ -130,7 +291,7 @@ function Kpi({ title, value }: { title: string; value: string }) {
       <div className="text-xs text-white/60">{title}</div>
       <div className="mt-1 text-2xl font-semibold">{value}</div>
     </div>
-  )
+  );
 }
 
 function Column({ title, items }: { title: string; items: string[] }) {
@@ -145,5 +306,43 @@ function Column({ title, items }: { title: string; items: string[] }) {
         ))}
       </ul>
     </div>
-  )
+  );
+}
+
+function SearchInput() {
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const handleSearch = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!searchQuery.trim()) return;
+
+    try {
+      // TODO: Backend dev - Switch USE_MOCK_DATA to false when API is ready
+      const USE_MOCK_DATA = true;
+      
+      if (USE_MOCK_DATA) {
+        console.log('Mock search for:', searchQuery);
+      } else {
+        const results = await investorApi.search(searchQuery);
+        console.log('Search results:', results);
+      }
+    } catch (error) {
+      console.error('Search failed:', error);
+    }
+  };
+
+  return (
+    <form onSubmit={handleSearch}>
+      <div className="relative">
+        <Search className="pointer-events-none absolute left-2 top-1/2 z-10 h-4 w-4 -translate-y-1/2 text-white/40" />
+        <input
+          aria-label="Discover input"
+          placeholder="Search domains, founders…"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="h-9 w-full rounded-md bg-[#0f1012] border border-[#1a1b1e] pl-8 pr-2 text-sm outline-none placeholder:text-white/40"
+        />
+      </div>
+    </form>
+  );
 }

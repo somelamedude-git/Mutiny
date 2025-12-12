@@ -14,13 +14,6 @@ import { Separator } from "@/components/ui/separator"
 import { Search, Plus } from "lucide-react"
 import { cn } from "@/lib/utils"
 
-// Define the shape of an idea
-export type IdeaData = {
-  title: string
-  description: string
-  // Add any additional fields your idea has here
-}
-
 export default function FounderLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
   const seg = pathname?.split("/").filter(Boolean)[1]
@@ -36,10 +29,10 @@ export default function FounderLayout({ children }: { children: React.ReactNode 
 
   const [isIdeaModalOpen, setIsIdeaModalOpen] = useState(false)
 
-  // Properly typed idea submit handler
-  const handleIdeaSubmit = (ideaData: IdeaData) => {
+  const handleIdeaSubmit = (ideaData: any) => {
+    // In a real app, this would make an API call
     console.log("New idea submitted:", ideaData)
-    // Trigger API call, page refresh, or success toast here
+    // You could also trigger a refresh of the ideas page or show a success message
   }
 
   return (
@@ -85,11 +78,7 @@ export default function FounderLayout({ children }: { children: React.ReactNode 
       </SidebarInset>
 
       {/* Post Idea Modal */}
-      <PostIdeaModal
-        isOpen={isIdeaModalOpen}
-        onClose={() => setIsIdeaModalOpen(false)}
-        onSubmit={handleIdeaSubmit}
-      />
+      <PostIdeaModal isOpen={isIdeaModalOpen} onClose={() => setIsIdeaModalOpen(false)} onSubmit={handleIdeaSubmit} />
     </SidebarProvider>
   )
 }
