@@ -30,15 +30,22 @@ export function Nav() {
           <Link href="#faq" className="text-sm text-white/80 hover:text-white transition-colors">
             FAQ
           </Link>
-          <Link href="#waitlist">
+          <Link href="/login" className="text-sm text-white/80 hover:text-white transition-colors">
+            Sign in
+          </Link>
+
+          <Link href="/login">
             <Button
               className={cn(
                 "bg-[#c6a15b] text-black hover:bg-[#d5b56e]",
                 "shadow-[0_0_0_1px_rgba(255,255,255,0.08)_inset,0_8px_30px_rgba(198,161,91,0.2)]",
               )}
             >
-              Join waitlist
+              Get started
             </Button>
+          </Link>
+          <Link href="/signup" className="text-sm text-white/70 hover:text-white">
+            Not having an account? Create
           </Link>
         </nav>
 
@@ -65,6 +72,12 @@ export function Nav() {
             </Link>
             <Link href="#waitlist" className="text-sm text-black">
               <Button className="w-full bg-[#c6a15b] text-black hover:bg-[#d5b56e]">Join waitlist</Button>
+            </Link>
+            <Link href="/login" className="text-sm text-white/90">
+              Get started
+            </Link>
+            <Link href="/signup" className="text-sm">
+              <Button className="w-full bg-[#c6a15b] text-black hover:bg-[#d5b56e]">Not having an account? Create</Button>
             </Link>
           </div>
         </div>

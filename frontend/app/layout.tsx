@@ -1,6 +1,7 @@
 import type React from "react"
 import type { Metadata } from "next"
 import "./globals.css"
+import { AuthProvider } from "@/components/auth-provider"
 
 export const metadata: Metadata = {
   title: "Mutiny",
@@ -33,7 +34,9 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
       </head>
       <body className="min-h-screen bg-[#0A0A0C] text-white antialiased dark">
         <div style={{ backgroundColor: '#0A0A0C', minHeight: '100vh' }}>
-          {children}
+          <AuthProvider>
+            {children}
+          </AuthProvider>
         </div>
       </body>
     </html>

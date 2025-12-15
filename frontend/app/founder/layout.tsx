@@ -14,6 +14,8 @@ import { Separator } from "@/components/ui/separator"
 import { Search, Plus } from "lucide-react"
 import { cn } from "@/lib/utils"
 
+import RequireAuth from "@/components/require-auth"
+
 export default function FounderLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
   const seg = pathname?.split("/").filter(Boolean)[1]
@@ -74,7 +76,11 @@ export default function FounderLayout({ children }: { children: React.ReactNode 
             </div>
           </header>
         </Suspense>
-        <div className="flex-1 p-4 sm:p-6">{children}</div>
+        <div className="flex-1 p-4 sm:p-6">
+          <RequireAuth>
+            {children}
+          </RequireAuth>
+        </div>
       </SidebarInset>
 
       {/* Post Idea Modal */}
