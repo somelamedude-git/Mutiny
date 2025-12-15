@@ -7,7 +7,6 @@ import { useAuth } from "@/components/auth-provider"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { WaveLogo } from "@/components/mutiny-logo"
-import ThreeOrb from "@/components/threeOrb"
 
 export default function LoginPage() {
   const router = useRouter()
@@ -38,18 +37,10 @@ export default function LoginPage() {
   return (
     <div className="min-h-[80vh] flex items-center justify-center px-6 py-16">
       <div className="relative w-full max-w-lg">
-        {/* Subtle 3D background orb centered behind the card */}
-        <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none hidden sm:block opacity-20">
-          <ThreeOrb size={520} />
-        </div>
-
         <div className="relative rounded-2xl p-10 bg-white/5 border border-white/6 shadow-lg backdrop-blur-md animate-in fade-in slide-in-from-bottom-2 duration-400">
           <div className="flex items-center gap-4 mb-6">
-            <div className="p-1 rounded-md bg-white/6">
+                <div className="p-1 rounded-md bg-transparent">
               <WaveLogo />
-            </div>
-            <div>
-              <div className="text-sm tracking-widest uppercase text-white font-semibold">MUT <span className="text-white/60">•</span> INY</div>
             </div>
           </div>
 

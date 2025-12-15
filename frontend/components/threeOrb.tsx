@@ -28,7 +28,8 @@ function Orb() {
 export default function ThreeOrb({ size = 420 }: { size?: number }) {
   return (
     <div className="pointer-events-none -z-10" aria-hidden={true}>
-      <div style={{ width: size, height: size }} className="opacity-30">
+      {/* slightly brighter and more visible orb for better contrast on dark headers */}
+      <div style={{ width: size, height: size }} className="opacity-40">
         <Canvas camera={{ position: [0, 0, 4], fov: 50 }} dpr={[1, 1.5]}>
           <ambientLight intensity={0.6} />
           <directionalLight position={[5, 5, 5]} intensity={0.6} />

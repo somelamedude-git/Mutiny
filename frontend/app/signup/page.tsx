@@ -83,16 +83,14 @@ export default function SignupPage() {
 
   return (
     <div className="min-h-[70vh] flex items-center justify-center px-6 py-12">
-      <div className="w-full max-w-2xl bg-white/5 border border-white/6 rounded-lg p-8 backdrop-blur-md shadow-lg">
+      <div className="relative w-full max-w-2xl z-10 bg-white/5 border border-white/6 rounded-lg p-8 backdrop-blur-md shadow-lg">
         <div className="flex items-center gap-3 mb-4">
-          <div className="p-1 rounded-md bg-white/6"><WaveLogo /></div>
-          <div>
-            <div className="text-sm tracking-widest uppercase text-white font-semibold">MUT <span className="text-white/60">•</span> INY</div>
-            <p className="text-sm text-white/70">Sign up to start building or investing.</p>
-          </div>
+          <div className="p-1 rounded-md bg-transparent"><WaveLogo /></div>
         </div>
 
         <div className="border-t border-white/6 mb-6" />
+
+        {/* Decorative orb removed per design preference */}
 
           <form onSubmit={onSubmit} className="grid gap-4">
             <div className="grid grid-cols-2 gap-4">
@@ -149,7 +147,7 @@ export default function SignupPage() {
               </div>
               <div>
                 <label className="text-sm text-white/70">Age</label>
-                <Input type="number" value={age === "" ? "" : String(age)} onChange={(e) => setAge(e.target.value === "" ? "" : Number(e.target.value))} placeholder="e.g. 32" className="mt-2" />
+                <Input type="number" min={13} max={120} value={age === "" ? "" : String(age)} onChange={(e) => setAge(e.target.value === "" ? "" : Number(e.target.value))} placeholder="e.g. 32" className="mt-2" />
                 {!ageValid && <p className="text-xs text-red-400">Please enter a valid age (13–120)</p>}
               </div>
             </div>
