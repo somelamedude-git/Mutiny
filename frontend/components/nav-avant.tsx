@@ -4,23 +4,12 @@ import { Button } from "@/components/ui/button"
 import { Sparkles, Infinity } from "lucide-react"
 import { useState } from "react"
 import { cn } from "@/lib/utils"
-import axios from "axios"
-import { useRouter } from "next/navigation"
+// axios and router were used for the old Early access flow but are no longer needed
 import { WaveLogo } from "./mutiny-logo"
 
 export function NavAvant() {
   const [open, setOpen] = useState(false)
-  const router = useRouter()
-  
-  const handleEarlyAccess = async () => {
-    try {
-      const res = await axios.post("#", { email: "test@example.com" })
-      console.log("POST success:", res.data)
-      router.push("/waitlist")
-    } catch (error) {
-      console.error("POST failed:", error)
-    }
-  }
+  // Early access handler removed — Get started now links directly to /login
 
   // Smooth scroll function with custom speed
   const smoothScrollTo = (targetId: string) => {
@@ -88,16 +77,18 @@ export function NavAvant() {
             >
               Funding
             </Link>
-            <Button
-              onClick={handleEarlyAccess}
-              className={cn(
-                "rounded-full bg-white text-black hover:bg-[#e3c27a] hover:text-black",
-                "shadow-[0_0_0_1px_rgba(255,255,255,0.16)_inset,0_12px_50px_rgba(227,194,122,0.24)]",
-              )}
-            >
-              <Sparkles className="h-4 w-4 mr-2" />
-              Early access
-            </Button>
+            <Link href="/login">
+              <Button
+                className={cn(
+                  "rounded-full bg-white text-black hover:bg-[#e3c27a] hover:text-black",
+                  "shadow-[0_0_0_1px_rgba(255,255,255,0.16)_inset,0_12px_50px_rgba(227,194,122,0.24)]",
+                )}
+              >
+                <Sparkles className="h-4 w-4 mr-2" />
+                Get started
+              </Button>
+            </Link>
+
           </nav>
           <button
             onClick={() => setOpen((v) => !v)}
@@ -133,12 +124,12 @@ export function NavAvant() {
             >
               Funding
             </Link>
-            <Button
-              onClick={handleEarlyAccess}
-              className="w-full rounded-full bg-white text-black hover:bg-[#e3c27a]"
-            >
-              Early access
-            </Button>
+            <Link href="/login">
+              <Button className="w-full rounded-full bg-white text-black hover:bg-[#e3c27a]">Get started</Button>
+            </Link>
+            <Link href="/signup" className="text-sm text-white/90 text-center">
+              Not having an account? Create
+            </Link>
           </div>
         </div>
       )}

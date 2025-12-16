@@ -1,235 +1,181 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useRef } from "react"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Card, CardContent } from "@/components/ui/card"
-import { Sparkles, Send, Lightbulb, Users, TrendingUp } from "lucide-react"
-import { cn } from "@/lib/utils"
+import { Download, Send, Loader2 } from "lucide-react"
+import MutinyResults from "@/components/mutiny-results"
+import FeedbackPanel from "@/components/feedback-panel"
+import { queryMutiny, type MutinyResponse } from "@/lib/mock-mutiny"
 
-type Message = {
-  id: string
-  from: "you" | "mutiny"
-  text: string
-  timestamp: string
-  suggestions?: string[]
-}
-
-const INITIAL_MESSAGES: Message[] = [
-  {
-    id: "1",
-    from: "mutiny",
-    text: "Hi! I'm your AI co-pilot. I can help you refine ideas, find co-founders, plan milestones, and navigate funding. What would you like to work on today?",
-    timestamp: "Just now",
-    suggestions: [
-      "Help me refine my Edge Vision Kit idea",
-      "Find potential co-founders for my project",
-      "Plan milestones for community funding",
-      "Review my pitch deck",
-    ],
-  },
-]
+type Message = { id: string; from: "you" | "bot"; text: string; ts: string }
 
 export default function FounderMutinyPage() {
-  const [messages, setMessages] = useState<Message[]>(INITIAL_MESSAGES)
   const [input, setInput] = useState("")
-  const [isTyping, setIsTyping] = useState(false)
+  const [messages, setMessages] = useState<Message[]>([])
+  const [mode, setMode] = useState<"mut" | "iny" | "mutiny">("mutiny")
+  const [results, setResults] = useState<MutinyResponse | null>(null)
+  const [loading, setLoading] = useState(false)
+  const endRef = useRef<HTMLDivElement | null>(null)
 
-  const handleSend = async (text: string) => {
-    if (!text.trim()) return
-
-    const userMessage: Message = {
+  const sendMessage = async (text: string) => {
+    if (!text.trim() || loading) return
+    const userMsg: Message = {
       id: Date.now().toString(),
       from: "you",
       text: text.trim(),
-      timestamp: "Just now",
+      ts: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
     }
-
-    setMessages((prev) => [...prev, userMessage])
+    setMessages((prev) => [...prev, userMsg])
     setInput("")
-    setIsTyping(true)
+    setLoading(true)
 
-    // Simulate AI response
-    setTimeout(() => {
-      const responses = [
-        {
-          text: "That's a great direction! For the Edge Vision Kit, I'd suggest focusing on these key areas: 1) Define your target use case more specifically, 2) Identify the key technical differentiators, 3) Plan a clear go-to-market strategy. Would you like me to dive deeper into any of these?",
-          suggestions: [
-            "Help with technical differentiators",
-            "Plan go-to-market strategy",
-            "Find hardware co-founders",
-          ],
-        },
-        {
-          text: "I can help you find co-founders! Based on your Edge Vision Kit project, you'd benefit from someone with hardware experience and possibly someone with ML/computer vision expertise. I can suggest some profiles from our network or help you craft a co-founder search post.",
-          suggestions: [
-            "Show me potential co-founder profiles",
-            "Help write co-founder search post",
-            "What skills should I look for?",
-          ],
-        },
-        {
-          text: "For community funding milestones, I recommend breaking your project into 3-4 clear, measurable phases. Each milestone should have objective completion criteria and transparent budget allocation. Let me help you structure this properly.",
-          suggestions: ["Structure my milestones", "Set milestone budgets", "Write milestone descriptions"],
-        },
-      ]
-
-      const randomResponse = responses[Math.floor(Math.random() * responses.length)]
-
-      const aiMessage: Message = {
+    try {
+      const res = await queryMutiny(text, mode)
+      setResults(res)
+      const botText = res.rationale || "Here are some matches and suggestions."
+      const botMsg: Message = {
         id: (Date.now() + 1).toString(),
-        from: "mutiny",
-        text: randomResponse.text,
-        timestamp: "Just now",
-        suggestions: randomResponse.suggestions,
+        from: "bot",
+        text: botText,
+        ts: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
       }
-
-      setMessages((prev) => [...prev, aiMessage])
-      setIsTyping(false)
-    }, 1500)
+      setMessages((prev) => [...prev, botMsg])
+      setTimeout(() => endRef.current?.scrollIntoView({ behavior: "smooth" }), 60)
+    } catch (err) {
+      console.error(err)
+    } finally {
+      setLoading(false)
+    }
   }
 
-  const handleSuggestionClick = (suggestion: string) => {
-    handleSend(suggestion)
+  const downloadChats = () => {
+    const payload = { createdAt: new Date().toISOString(), mode, messages }
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement("a")
+    a.href = url
+    a.download = `mutiny-chat-${Date.now()}.json`
+    a.click()
+    URL.revokeObjectURL(url)
   }
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault()
+      sendMessage(input)
+    }
+  }
+
+  const toggles: { key: "mut" | "iny" | "mutiny"; label: string; color: string }[] = [
+    { key: "mut", label: "Mut", color: "bg-red-500" },
+    { key: "iny", label: "Iny", color: "bg-green-500" },
+    { key: "mutiny", label: "Mutiny", color: "bg-purple-600" },
+  ]
 
   return (
-    <div className="mx-auto max-w-[1000px] space-y-6">
+    <div className="flex flex-col h-[calc(100vh-80px)] max-w-4xl mx-auto px-6">
       {/* Header */}
-      <div className="rounded-xl bg-[#101113] p-5">
-        <div className="flex items-center gap-3">
-          <div className="h-10 w-10 rounded-full bg-gradient-to-br from-[#e3c27a] via-[#34d399] to-[#f472b6] grid place-items-center">
-            <Sparkles className="h-5 w-5 text-white" />
-          </div>
-          <div>
-            <h1 className="text-xl font-semibold">Mutiny AI</h1>
-            <p className="text-sm text-white/70">Your co-pilot for ideas, team building, and funding</p>
-          </div>
-        </div>
-      </div>
-
-      {/* Quick actions */}
-      <div className="grid gap-3 sm:grid-cols-3">
-        <Card
-          className="bg-[#101113] border-[#1a1b1e] hover:bg-[#101113]/80 transition-colors cursor-pointer"
-          onClick={() => handleSend("Help me refine my current idea")}
-        >
-          <CardContent className="p-4 flex items-center gap-3">
-            <Lightbulb className="h-5 w-5 text-white/60" />
-            <div>
-              <div className="font-medium text-sm">Refine ideas</div>
-              <div className="text-xs text-white/60">Get feedback and direction</div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card
-          className="bg-[#101113] border-[#1a1b1e] hover:bg-[#101113]/80 transition-colors cursor-pointer"
-          onClick={() => handleSend("Help me find co-founders")}
-        >
-          <CardContent className="p-4 flex items-center gap-3">
-            <Users className="h-5 w-5 text-white/60" />
-            <div>
-              <div className="font-medium text-sm">Find co-founders</div>
-              <div className="text-xs text-white/60">Match with complementary skills</div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card
-          className="bg-[#101113] border-[#1a1b1e] hover:bg-[#101113]/80 transition-colors cursor-pointer"
-          onClick={() => handleSend("Help me plan funding milestones")}
-        >
-          <CardContent className="p-4 flex items-center gap-3">
-            <TrendingUp className="h-5 w-5 text-white/60" />
-            <div>
-              <div className="font-medium text-sm">Plan funding</div>
-              <div className="text-xs text-white/60">Structure milestones and budgets</div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Chat interface */}
-      <div className="rounded-xl bg-[#101113] overflow-hidden">
-        {/* Messages */}
-        <div className="h-[60vh] overflow-y-auto p-4 space-y-4">
-          {messages.map((message) => (
-            <div key={message.id} className={cn("flex", message.from === "you" ? "justify-end" : "justify-start")}>
-              <div className={cn("max-w-[80%] space-y-2")}>
-                <div
-                  className={cn(
-                    "rounded-2xl px-4 py-3 text-sm",
-                    message.from === "you" ? "bg-white text-[#0b0b0c]" : "bg-[#1a1b1e] text-white",
-                  )}
-                >
-                  {message.text}
-                </div>
-
-                {message.suggestions && (
-                  <div className="flex flex-wrap gap-2">
-                    {message.suggestions.map((suggestion, index) => (
-                      <button
-                        key={index}
-                        onClick={() => handleSuggestionClick(suggestion)}
-                        className="text-xs rounded-full border border-white/10 bg-[#0f1012] px-3 py-1.5 text-white/80 hover:bg-white/[0.06] transition-colors"
-                      >
-                        {suggestion}
-                      </button>
-                    ))}
-                  </div>
-                )}
-
-                <div className={cn("text-xs", message.from === "you" ? "text-right text-white/50" : "text-white/50")}>
-                  {message.timestamp}
-                </div>
-              </div>
-            </div>
-          ))}
-
-          {isTyping && (
-            <div className="flex justify-start">
-              <div className="bg-[#1a1b1e] rounded-2xl px-4 py-3 text-sm text-white">
-                <div className="flex items-center gap-1">
-                  <div className="flex space-x-1">
-                    <div className="h-2 w-2 bg-white/60 rounded-full animate-bounce [animation-delay:-0.3s]"></div>
-                    <div className="h-2 w-2 bg-white/60 rounded-full animate-bounce [animation-delay:-0.15s]"></div>
-                    <div className="h-2 w-2 bg-white/60 rounded-full animate-bounce"></div>
-                  </div>
-                  <span className="ml-2 text-white/60">Mutiny is thinking...</span>
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Input */}
-        <div className="border-t border-[#1a1b1e] p-4">
-          <form
-            onSubmit={(e) => {
-              e.preventDefault()
-              handleSend(input)
-            }}
-            className="flex items-center gap-2"
-          >
-            <Input
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              placeholder="Ask Mutiny anything about your ideas, team, or funding..."
-              className="flex-1 bg-[#0f1012] border-transparent text-white placeholder:text-white/40"
-              disabled={isTyping}
-            />
-            <Button
-              type="submit"
-              size="icon"
-              disabled={!input.trim() || isTyping}
-              className="bg-white text-[#0b0b0c] hover:bg-white/90"
+      <header className="flex items-center justify-end gap-3 py-6">
+        <div className="flex items-center gap-1" role="group" aria-label="Model selection">
+          {toggles.map((t) => (
+            <button
+              key={t.key}
+              aria-label={`Select ${t.label} model`}
+              aria-pressed={mode === t.key}
+              onClick={() => setMode(t.key)}
+              className={`h-9 px-4 rounded-lg text-sm font-medium transition-colors ${
+                mode === t.key ? `${t.color} text-white` : "bg-white/5 text-white/60 hover:bg-white/10"
+              }`}
             >
-              <Send className="h-4 w-4" />
-            </Button>
-          </form>
+              {t.label}
+            </button>
+          ))}
         </div>
-      </div>
+        <Button
+          size="sm"
+          variant="ghost"
+          onClick={downloadChats}
+          aria-label="Download chat as JSON"
+          className="text-white/60 hover:text-white hover:bg-white/5"
+        >
+          <Download className="h-4 w-4" />
+        </Button>
+      </header>
+
+      {/* Chat Area */}
+      <main className="flex-1 overflow-y-auto">
+        {messages.length === 0 ? (
+          <div className="flex flex-col items-center justify-center h-full text-center">
+            <h1 className="text-3xl font-bold text-white">Think or Die a potato</h1>
+            <p className="mt-3 text-white/50">Start a conversation — the models are ready.</p>
+          </div>
+        ) : (
+          <div className="space-y-4 pb-6">
+            {messages.map((m) => (
+              <div key={m.id} className={`flex ${m.from === "you" ? "justify-end" : "justify-start"}`}>
+                <div
+                  className={`max-w-[70%] px-4 py-3 rounded-2xl ${
+                    m.from === "you" ? "bg-white text-black" : "bg-zinc-800 text-white"
+                  }`}
+                >
+                  <p className="whitespace-pre-wrap">{m.text}</p>
+                  <time className={`block text-xs mt-2 ${m.from === "you" ? "text-black/40" : "text-white/40"}`}>
+                    {m.ts}
+                  </time>
+                </div>
+              </div>
+            ))}
+
+            {loading && (
+              <div className="flex justify-start">
+                <div className="bg-zinc-800 px-4 py-3 rounded-2xl">
+                  <Loader2 className="h-5 w-5 animate-spin text-white/60" />
+                </div>
+              </div>
+            )}
+
+            {results && !loading && (
+              <div className="mt-8 space-y-4">
+                <div className="rounded-xl border border-white/10 bg-zinc-900/50 p-5">
+                  <MutinyResults data={results} />
+                </div>
+                <FeedbackPanel />
+              </div>
+            )}
+
+            <div ref={endRef} />
+          </div>
+        )}
+      </main>
+
+      {/* Composer */}
+      <footer className="py-6 border-t border-white/5">
+        <form
+          onSubmit={(e) => {
+            e.preventDefault()
+            sendMessage(input)
+          }}
+          className="flex items-end gap-3"
+        >
+          <textarea
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={handleKeyDown}
+            placeholder="Type your message..."
+            aria-label="Message input"
+            rows={1}
+            className="flex-1 min-h-[48px] max-h-[160px] rounded-xl bg-white/5 border border-white/10 px-4 py-3 text-white placeholder:text-white/40 resize-none focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-transparent"
+          />
+          <Button
+            type="submit"
+            disabled={!input.trim() || loading}
+            aria-label="Send message"
+            className="h-12 px-5 bg-purple-600 hover:bg-purple-700 disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            <Send className="h-4 w-4" />
+          </Button>
+        </form>
+      </footer>
     </div>
   )
 }

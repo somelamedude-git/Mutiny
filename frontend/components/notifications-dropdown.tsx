@@ -1,197 +1,135 @@
 "use client"
 
-import type React from "react"
-
-import { useState } from "react"
-import { useRouter } from "next/navigation"
+import { useState, useEffect } from "react"
+import axios from "axios"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { Bell, MessageSquare, TrendingUp, Lightbulb, Users, Settings, X, Check } from "lucide-react"
-import { cn } from "@/lib/utils"
+import { Bell, Check, Loader2 } from "lucide-react"
+import { Badge } from "./ui/badge"
+
+// #TODO: Backend - Update this with your actual API base URL
+const API_BASE_URL = "#"
 
 interface Notification {
   id: string
-  type: "message" | "investment" | "idea" | "team" | "system"
-  title: string
-  description: string
-  time: string
-  isRead: boolean
-  actionUrl: string
+  text: string
+  read: boolean
 }
 
-const mockNotifications: Notification[] = [
-  {
-    id: "1",
-    type: "message",
-    title: "New message from Alex Chen",
-    description: "Interested in your Edge Vision Kit project",
-    time: "2m ago",
-    isRead: false,
-    actionUrl: "/founder/chats",
+// API Service Layer
+const notificationsAPI = {
+  // #TODO: Backend - GET /api/notifications - Fetch user's notifications
+  async getNotifications(): Promise<Notification[]> {
+    try {
+      const response = await axios.get(`${API_BASE_URL}/notifications`, {
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+      })
+      return response.data
+    } catch (error) {
+      console.error("Error fetching notifications:", error)
+      // Return empty array on error to prevent crashing
+      return []
+    }
   },
-  {
-    id: "2",
-    type: "investment",
-    title: "Funding milestone reached",
-    description: "Your Climate Sensors project hit $5,000",
-    time: "1h ago",
-    isRead: false,
-    actionUrl: "/founder/funding",
-  },
-  {
-    id: "3",
-    type: "idea",
-    title: "Someone liked your idea",
-    description: "Local-first Creator Analytics got 3 new likes",
-    time: "3h ago",
-    isRead: true,
-    actionUrl: "/founder/ideas",
-  },
-  {
-    id: "4",
-    type: "team",
-    title: "Team invitation",
-    description: "Riley M. wants to collaborate on DePIN project",
-    time: "5h ago",
-    isRead: false,
-    actionUrl: "/founder/chats",
-  },
-  {
-    id: "5",
-    type: "system",
-    title: "Profile verification complete",
-    description: "Your founder profile has been verified",
-    time: "1d ago",
-    isRead: true,
-    actionUrl: "/founder/profile",
-  },
-]
 
-const notificationIcons = {
-  message: MessageSquare,
-  investment: TrendingUp,
-  idea: Lightbulb,
-  team: Users,
-  system: Settings,
-}
-
-const notificationColors = {
-  message: "text-blue-400",
-  investment: "text-green-400",
-  idea: "text-yellow-400",
-  team: "text-purple-400",
-  system: "text-gray-400",
+  // #TODO: Backend - POST /api/notifications/mark-all-read - Mark all as read
+  async markAllAsRead(): Promise<void> {
+    try {
+      await axios.post(
+        `${API_BASE_URL}/notifications/mark-all-read`,
+        {},
+        {
+          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+        },
+      )
+    } catch (error) {
+      console.error("Error marking notifications as read:", error)
+      throw new Error("Failed to mark notifications as read.")
+    }
+  },
 }
 
 export function NotificationsDropdown() {
-  const [notifications, setNotifications] = useState<Notification[]>(mockNotifications)
-  const router = useRouter()
+  const [notifications, setNotifications] = useState<Notification[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [isOpen, setIsOpen] = useState(false)
 
-  const unreadCount = notifications.filter((n) => !n.isRead).length
-
-  const handleNotificationClick = (notification: Notification) => {
-    // Mark as read
-    setNotifications((prev) => prev.map((n) => (n.id === notification.id ? { ...n, isRead: true } : n)))
-    // Navigate to the relevant page
-    router.push(notification.actionUrl)
+  const fetchNotifications = async () => {
+    setIsLoading(true)
+    const data = await notificationsAPI.getNotifications()
+    setNotifications(data)
+    setIsLoading(false)
   }
 
-  const handleMarkAsRead = (id: string, e: React.MouseEvent) => {
-    e.stopPropagation()
-    setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, isRead: true } : n)))
+  useEffect(() => {
+    if (isOpen) {
+      fetchNotifications()
+    }
+  }, [isOpen])
+
+  const handleMarkAllAsRead = async () => {
+    try {
+      await notificationsAPI.markAllAsRead()
+      setNotifications((prev) => prev.map((n) => ({ ...n, read: true })))
+    } catch (error) {
+      // Optionally show a toast notification on failure
+      console.error(error)
+    }
   }
 
-  const handleRemoveNotification = (id: string, e: React.MouseEvent) => {
-    e.stopPropagation()
-    setNotifications((prev) => prev.filter((n) => n.id !== id))
-  }
-
-  const handleMarkAllAsRead = () => {
-    setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })))
-  }
+  const unreadCount = notifications.filter((n) => !n.read).length
 
   return (
-    <DropdownMenu>
+    <DropdownMenu onOpenChange={setIsOpen}>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon" className="relative text-white/60 hover:text-white">
-          <Bell className="h-5 w-5" />
+        <Button
+          variant="outline"
+          size="icon"
+          className="relative border-[#1a1b1e] text-white/80 hover:bg-white/10"
+        >
+          <Bell className="h-4 w-4" />
           {unreadCount > 0 && (
-            <Badge className="absolute -top-1 -right-1 h-5 w-5 rounded-full bg-red-500 p-0 text-xs text-white flex items-center justify-center">
-              {unreadCount > 9 ? "9+" : unreadCount}
+            <Badge
+              variant="destructive"
+              className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full p-0 text-[10px]"
+            >
+              {unreadCount}
             </Badge>
           )}
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-80 bg-[#101113] border-[#1a1b1e] text-white">
-        <div className="flex items-center justify-between p-3 border-b border-[#1a1b1e]">
-          <h3 className="font-semibold">Notifications</h3>
-          {unreadCount > 0 && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleMarkAllAsRead}
-              className="text-xs text-white/60 hover:text-white"
-            >
-              Mark all as read
-            </Button>
-          )}
-        </div>
-        <div className="max-h-96 overflow-y-auto">
-          {notifications.length === 0 ? (
-            <div className="p-4 text-center text-white/60">
-              <Bell className="h-8 w-8 mx-auto mb-2 opacity-50" />
-              <p>No notifications</p>
-            </div>
-          ) : (
-            notifications.map((notification) => {
-              const Icon = notificationIcons[notification.type]
-              const iconColor = notificationColors[notification.type]
-
-              return (
-                <DropdownMenuItem
-                  key={notification.id}
-                  className="p-0 focus:bg-white/[0.06]"
-                  onClick={() => handleNotificationClick(notification)}
-                >
-                  <div className="flex items-start gap-3 p-3 w-full cursor-pointer">
-                    <div className="relative">
-                      <Icon className={cn("h-4 w-4 mt-0.5", iconColor)} />
-                      {!notification.isRead && (
-                        <div className="absolute -top-1 -right-1 h-2 w-2 bg-blue-500 rounded-full" />
-                      )}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium leading-tight">{notification.title}</p>
-                      <p className="text-xs text-white/60 mt-1 line-clamp-2">{notification.description}</p>
-                      <p className="text-xs text-white/40 mt-1">{notification.time}</p>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      {!notification.isRead && (
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={(e) => handleMarkAsRead(notification.id, e)}
-                          className="h-6 w-6 text-white/40 hover:text-white"
-                        >
-                          <Check className="h-3 w-3" />
-                        </Button>
-                      )}
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={(e) => handleRemoveNotification(notification.id, e)}
-                        className="h-6 w-6 text-white/40 hover:text-white"
-                      >
-                        <X className="h-3 w-3" />
-                      </Button>
-                    </div>
-                  </div>
-                </DropdownMenuItem>
-              )
-            })
-          )}
-        </div>
+        <DropdownMenuLabel className="font-semibold">Notifications</DropdownMenuLabel>
+        <DropdownMenuSeparator className="bg-white/10" />
+        {isLoading ? (
+          <div className="flex items-center justify-center p-4">
+            <Loader2 className="h-5 w-5 animate-spin text-white/60" />
+          </div>
+        ) : notifications.length > 0 ? (
+          notifications.map((notification) => (
+            <DropdownMenuItem key={notification.id} className="flex items-start gap-3 p-2 focus:bg-white/10">
+              <div className={`mt-1 h-2 w-2 flex-shrink-0 rounded-full ${notification.read ? "bg-transparent" : "bg-white"}`} />
+              <span className="flex-1 text-sm text-white/90">{notification.text}</span>
+            </DropdownMenuItem>
+          ))
+        ) : (
+          <p className="p-4 text-center text-sm text-white/70">No new notifications.</p>
+        )}
+        <DropdownMenuSeparator className="bg-white/10" />
+        <DropdownMenuItem
+          onClick={handleMarkAllAsRead}
+          disabled={unreadCount === 0}
+          className="flex items-center justify-center gap-2 p-2 text-sm text-white/70 focus:bg-white/10 focus:text-white cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          <Check className="h-4 w-4" /> Mark all as read
+        </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   )

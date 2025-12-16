@@ -83,7 +83,7 @@ export default function InvestorChatsPage() {
       }
     };
     fetchThreads();
-  }, []);
+  }, [activeId]);
 
   // --- Fetch Messages ---
   useEffect(() => {

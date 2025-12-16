@@ -1,24 +1,27 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { useRouter } from "next/navigation"
+import axios from "axios"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
 import { PostIdeaModal } from "@/components/post-idea-modal"
-import { Search, Plus, Filter, Eye, MessageSquare, Heart, Edit } from "lucide-react"
+import { Search, Plus, Filter, Eye, MessageSquare, Heart, Edit, Loader2 } from "lucide-react"
 import { cn } from "@/lib/utils"
+
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || ""
 
 type Tab = "yours" | "discover"
 
 type Stage = "concept" | "prototype" | "mvp" | "launched"
 
-type Idea = {
+interface Idea {
   id: string
   title: string
   author: string
-  desc: string
+  desc?: string
   tags: string[]
   stage: Stage
   funding?: string
@@ -32,7 +35,7 @@ type Idea = {
   createdAt?: string
 }
 
-type IdeaFormData = {
+interface IdeaFormData {
   title: string
   description: string
   tags: string[]
@@ -41,217 +44,148 @@ type IdeaFormData = {
   isDraft: boolean
 }
 
-const YOUR_IDEAS: Idea[] = [
-  {
-    id: "y1",
-    title: "Edge Vision Kit",
-    author: "You",
-    desc: "Low‑power on‑device vision kit with local models. Shipping v0 sensors to early adopters.",
-    description:
-      "Low‑power on‑device vision kit with local models. Shipping v0 sensors to early adopters. This system enables real-time computer vision processing without cloud dependency, perfect for robotics and IoT applications.",
-    tags: ["Edge AI", "Robotics", "Hardware"],
-    stage: "mvp",
-    funding: "$8,000 raised",
-    likes: 24,
-    comments: 8,
-    views: 156,
-    isYours: true,
-    lookingFor: ["Hardware engineer", "Go-to-market lead"],
-    isDraft: false,
-    createdAt: "2024-01-15",
+// ---------- API Service ----------
+const ideasAPI = {
+  async fetchYourIdeas(): Promise<Idea[]> {
+    const token = localStorage.getItem("token")
+    if (!token) throw new Error("User not authenticated")
+    const response = await axios.get(`${API_BASE_URL}/ideas/user`, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+    return response.data
   },
-  {
-    id: "y2",
-    title: "Local‑first Creator Analytics",
-    author: "You",
-    desc: "Privacy‑first analytics with CRDT sync across devices. No data leaves your control.",
-    description:
-      "Privacy‑first analytics with CRDT sync across devices. No data leaves your control. Built for creators who want to understand their audience without compromising privacy.",
-    tags: ["Creator infra", "Privacy", "Local‑first"],
-    stage: "prototype",
-    funding: "$4,400 / $12,000",
-    likes: 18,
-    comments: 12,
-    views: 89,
-    isYours: true,
-    lookingFor: ["Frontend developer", "Marketing advisor"],
-    isDraft: false,
-    createdAt: "2024-01-12",
-  },
-  {
-    id: "y3",
-    title: "Climate Hardware Sensors",
-    author: "You",
-    desc: "Modular environmental sensors with open data protocols. Still refining the concept.",
-    description:
-      "Modular environmental sensors with open data protocols. Still refining the concept. Aiming to create affordable, accurate climate monitoring for communities worldwide.",
-    tags: ["Climate hardware", "IoT"],
-    stage: "concept",
-    likes: 5,
-    comments: 2,
-    views: 23,
-    isYours: true,
-    lookingFor: ["Co-founder", "Climate expert"],
-    isDraft: true,
-    createdAt: "2024-01-10",
-  },
-]
 
-const DISCOVER_IDEAS: Idea[] = [
-  {
-    id: "d1",
-    title: "Neurotech IDE",
-    author: "Sam K.",
-    desc: "Local‑only IDE and toolchain for neural interfaces. Privacy‑first development environment.",
-    tags: ["Bio tooling", "Privacy", "Dev tools"],
-    stage: "prototype",
-    likes: 42,
-    comments: 15,
-    views: 234,
-    lookingFor: ["Frontend developer", "Neuroscientist"],
+  async fetchDiscoverIdeas(): Promise<Idea[]> {
+    const response = await axios.get(`${API_BASE_URL}/ideas/discover`)
+    return response.data
   },
-  {
-    id: "d2",
-    title: "DePIN Sensor Mesh",
-    author: "Riley M.",
-    desc: "Community-powered sensor mesh with provable data lineage and token incentives.",
-    tags: ["DePIN", "Edge AI", "Crypto"],
-    stage: "mvp",
-    funding: "Seeking $60k",
-    likes: 67,
-    comments: 23,
-    views: 445,
-    lookingFor: ["Blockchain developer", "Hardware engineer"],
-  },
-  {
-    id: "d3",
-    title: "Robotics Firmware Co‑pilot",
-    author: "Alex P.",
-    desc: "AI assistant that writes and tests firmware for robotics teams. Supports ARM/RISC‑V.",
-    tags: ["Robotics", "AI", "Dev tools"],
-    stage: "launched",
-    likes: 89,
-    comments: 31,
-    views: 678,
-    lookingFor: ["Sales lead", "Technical writer"],
-  },
-  {
-    id: "d4",
-    title: "Quantum Computing Simulator",
-    author: "Jordan L.",
-    desc: "Browser-based quantum circuit simulator for education and research. No installation required.",
-    tags: ["Quantum", "EdTech", "Simulation"],
-    stage: "prototype",
-    likes: 156,
-    comments: 42,
-    views: 892,
-    lookingFor: ["Quantum physicist", "UI/UX designer"],
-  },
-  {
-    id: "d5",
-    title: "Sustainable Supply Chain Tracker",
-    author: "Maya S.",
-    desc: "Blockchain-based supply chain transparency for sustainable brands. Track from source to consumer.",
-    tags: ["Sustainability", "Blockchain", "Supply Chain"],
-    stage: "concept",
-    likes: 73,
-    comments: 18,
-    views: 324,
-    lookingFor: ["Supply chain expert", "Sustainability advisor"],
-  },
-  {
-    id: "d6",
-    title: "Voice-First Coding Assistant",
-    author: "Chris T.",
-    desc: "Code by speaking naturally. AI converts voice commands to code across multiple languages.",
-    tags: ["AI", "Accessibility", "Dev tools"],
-    stage: "mvp",
-    funding: "Pre-seed raised",
-    likes: 201,
-    comments: 67,
-    views: 1243,
-    lookingFor: ["Speech recognition expert", "Developer advocate"],
-  },
-]
 
+  async createIdea(data: IdeaFormData): Promise<Idea> {
+    const token = localStorage.getItem("token")
+    if (!token) throw new Error("User not authenticated")
+    const response = await axios.post(`${API_BASE_URL}/ideas`, data, {
+      headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+    })
+    return response.data
+  },
+
+  async updateIdea(id: string, data: IdeaFormData): Promise<Idea> {
+    const token = localStorage.getItem("token")
+    if (!token) throw new Error("User not authenticated")
+    const response = await axios.put(`${API_BASE_URL}/ideas/${id}`, data, {
+      headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+    })
+    return response.data
+  },
+
+  async deleteIdea(id: string): Promise<void> {
+    const token = localStorage.getItem("token")
+    if (!token) throw new Error("User not authenticated")
+    await axios.delete(`${API_BASE_URL}/ideas/${id}`, { headers: { Authorization: `Bearer ${token}` } })
+  },
+
+  async likeIdea(id: string): Promise<void> {
+    const token = localStorage.getItem("token")
+    if (!token) throw new Error("User not authenticated")
+    await axios.post(`${API_BASE_URL}/ideas/${id}/like`, {}, { headers: { Authorization: `Bearer ${token}` } })
+  },
+
+  async getIdeaById(id: string): Promise<Idea> {
+    const response = await axios.get(`${API_BASE_URL}/ideas/${id}`)
+    return response.data
+  },
+}
+
+// ---------- Component ----------
 export default function FounderIdeasPage() {
   const [tab, setTab] = useState<Tab>("yours")
   const [query, setQuery] = useState("")
-  const [yourIdeas, setYourIdeas] = useState<Idea[]>(YOUR_IDEAS)
+  const [yourIdeas, setYourIdeas] = useState<Idea[]>([])
+  const [discoverIdeas, setDiscoverIdeas] = useState<Idea[]>([])
   const [editingIdea, setEditingIdea] = useState<Idea | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const router = useRouter()
 
-  const ideas = tab === "yours" ? yourIdeas : DISCOVER_IDEAS
+  const loadIdeas = useCallback(async () => {
+    setIsLoading(true)
+    setError(null)
+    try {
+      if (tab === "yours") {
+        const ideas = await ideasAPI.fetchYourIdeas()
+        setYourIdeas(ideas)
+      } else {
+        const ideas = await ideasAPI.fetchDiscoverIdeas()
+        setDiscoverIdeas(ideas)
+      }
+    } catch (err) {
+      setError("Failed to load ideas. Please try again.")
+      console.error(err)
+    } finally {
+      setIsLoading(false)
+    }
+  }, [tab])
+
+  useEffect(() => {
+    loadIdeas()
+  }, [loadIdeas])
+
+  const ideas = tab === "yours" ? yourIdeas : discoverIdeas
   const filtered = ideas.filter(
     (idea) =>
       idea.title.toLowerCase().includes(query.toLowerCase()) ||
-      idea.desc.toLowerCase().includes(query.toLowerCase()) ||
-      idea.tags.some((tag) => tag.toLowerCase().includes(query.toLowerCase())),
+      idea.desc?.toLowerCase().includes(query.toLowerCase()) ||
+      idea.tags.some((tag) => tag.toLowerCase().includes(query.toLowerCase()))
   )
 
-  function handleIdeaSubmit(data: IdeaFormData) {
-    const newIdea: Idea = {
-      id: `y${Date.now()}`,
-      title: data.title,
-      author: "You",
-      desc: data.description,
-      description: data.description,
-      tags: data.tags,
-      stage: data.stage,
-      likes: 0,
-      comments: 0,
-      views: 0,
-      isYours: true,
-      lookingFor: data.lookingFor,
-      isDraft: data.isDraft,
-      createdAt: new Date().toISOString().split("T")[0],
+  async function handleIdeaSubmit(data: IdeaFormData) {
+    try {
+      const newIdea = await ideasAPI.createIdea(data)
+      setYourIdeas((prev) => [newIdea, ...prev])
+      setIsModalOpen(false)
+    } catch (err) {
+      console.error("Failed to create idea:", err)
+      alert("Failed to create idea. Please try again.")
     }
-
-    setYourIdeas((prev) => [newIdea, ...prev])
   }
 
-  function handleIdeaUpdate(ideaData: IdeaFormData) {
-    if (editingIdea) {
-      setYourIdeas((prev) =>
-        prev.map((idea) =>
-          idea.id === editingIdea.id
-            ? {
-                ...idea,
-                title: ideaData.title,
-                desc: ideaData.description,
-                description: ideaData.description,
-                tags: ideaData.tags,
-                stage: ideaData.stage,
-                lookingFor: ideaData.lookingFor,
-                isDraft: ideaData.isDraft,
-              }
-            : idea,
-        ),
-      )
+  async function handleIdeaUpdate(ideaData: IdeaFormData) {
+    if (!editingIdea) return
+    try {
+      const updatedIdea = await ideasAPI.updateIdea(editingIdea.id, ideaData)
+      setYourIdeas((prev) => prev.map((idea) => (idea.id === editingIdea.id ? updatedIdea : idea)))
+      setEditingIdea(null)
+      setIsModalOpen(false)
+    } catch (err) {
+      console.error("Failed to update idea:", err)
+      alert("Failed to update idea. Please try again.")
     }
-    setEditingIdea(null)
-    setIsModalOpen(false)
   }
 
   function handleModalSubmit(data: IdeaFormData) {
-    if (editingIdea) {
-      handleIdeaUpdate(data)
-    } else {
-      handleIdeaSubmit(data)
-    }
+   if (editingIdea) {
+  handleIdeaUpdate(data)
+} else {
+  handleIdeaSubmit(data)
+}
   }
 
-  function handleModalDelete() {
-    if (editingIdea) {
-      handleIdeaDelete(editingIdea.id)
-    }
+  async function handleModalDelete() {
+    if (!editingIdea) return
+    await handleIdeaDelete(editingIdea.id)
   }
 
-  function handleIdeaDelete(id: string) {
-    setYourIdeas((prev) => prev.filter((idea) => idea.id !== id))
-    setEditingIdea(null)
-    setIsModalOpen(false)
+  async function handleIdeaDelete(id: string) {
+    try {
+      await ideasAPI.deleteIdea(id)
+      setYourIdeas((prev) => prev.filter((idea) => idea.id !== id))
+      setEditingIdea(null)
+      setIsModalOpen(false)
+    } catch (err) {
+      console.error("Failed to delete idea:", err)
+      alert("Failed to delete idea. Please try again.")
+    }
   }
 
   function handleEditClick(idea: Idea) {
@@ -265,12 +199,23 @@ export default function FounderIdeasPage() {
   }
 
   function handleViewClick(idea: Idea) {
-    if (idea.isYours) {
-      // For your own ideas, just show them in the same view
-      return
-    } else {
-      // For discover ideas, navigate to detail page
-      router.push(`/founder/ideas/${idea.id}`)
+    if (!idea.isYours) router.push(`/founder/ideas/${idea.id}`)
+  }
+
+  async function handleLikeIdea(ideaId: string) {
+    try {
+      await ideasAPI.likeIdea(ideaId)
+      const updateIdeas = (ideas: Idea[]) =>
+        ideas.map((idea) =>
+          idea.id === ideaId ? { ...idea, likes: idea.likes + 1 } : idea
+        )
+      if (tab === "yours") {
+  setYourIdeas(updateIdeas)
+} else {
+  setDiscoverIdeas(updateIdeas)
+}
+    } catch (err) {
+      console.error("Failed to like idea:", err)
     }
   }
 
@@ -301,7 +246,7 @@ export default function FounderIdeasPage() {
                       ? "bg-blue-500/10 text-blue-300 border-blue-500/20"
                       : idea.stage === "prototype"
                         ? "bg-yellow-500/10 text-yellow-300 border-yellow-500/20"
-                        : "bg-white/[0.04] text-white border-white/10",
+                        : "bg-white/[0.04] text-white border-white/10"
                 )}
               >
                 {idea.stage.toUpperCase()}
@@ -319,7 +264,7 @@ export default function FounderIdeasPage() {
             </div>
           </div>
 
-          <p className="text-sm text-white/70 mb-3 line-clamp-3">{idea.desc}</p>
+          <p className="text-sm text-white/70 mb-3 line-clamp-3">{idea.desc || idea.description}</p>
 
           <div className="flex flex-wrap gap-1 mb-3">
             {idea.tags.slice(0, 3).map((tag) => (
@@ -360,10 +305,13 @@ export default function FounderIdeasPage() {
 
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3 text-xs text-white/60">
-              <span className="flex items-center gap-1">
+              <button
+                onClick={() => handleLikeIdea(idea.id)}
+                className="flex items-center gap-1 hover:text-white transition-colors"
+              >
                 <Heart className="h-3.5 w-3.5" />
                 {idea.likes}
-              </span>
+              </button>
               <span className="flex items-center gap-1">
                 <MessageSquare className="h-3.5 w-3.5" />
                 {idea.comments}
@@ -388,7 +336,6 @@ export default function FounderIdeasPage() {
 
   return (
     <div className="mx-auto max-w-[1400px] space-y-6">
-      {/* Header */}
       <div className="rounded-xl bg-[#101113] p-4">
         <div className="flex flex-col sm:flex-row sm:items-center gap-3">
           <div className="flex-1">
@@ -402,7 +349,6 @@ export default function FounderIdeasPage() {
         </div>
       </div>
 
-      {/* Tabs and search */}
       <div className="rounded-xl bg-[#101113] p-4">
         <div className="flex flex-col sm:flex-row gap-3">
           <div className="flex rounded-lg border border-[#1a1b1e] bg-[#0f1012] p-1">
@@ -410,7 +356,7 @@ export default function FounderIdeasPage() {
               onClick={() => setTab("yours")}
               className={cn(
                 "px-3 py-1.5 text-sm rounded-md transition",
-                tab === "yours" ? "bg-white text-[#0b0b0c]" : "text-white/80 hover:text-white",
+                tab === "yours" ? "bg-white text-[#0b0b0c]" : "text-white/80 hover:text-white"
               )}
             >
               Your ideas ({yourIdeas.length})
@@ -419,7 +365,7 @@ export default function FounderIdeasPage() {
               onClick={() => setTab("discover")}
               className={cn(
                 "px-3 py-1.5 text-sm rounded-md transition",
-                tab === "discover" ? "bg-white text-[#0b0b0c]" : "text-white/80 hover:text-white",
+                tab === "discover" ? "bg-white text-[#0b0b0c]" : "text-white/80 hover:text-white"
               )}
             >
               Discover
@@ -444,20 +390,32 @@ export default function FounderIdeasPage() {
         </div>
       </div>
 
-      {/* Ideas grid */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {filtered.map((idea) => (
-          <IdeaCard key={idea.id} idea={idea} />
-        ))}
-      </div>
-
-      {filtered.length === 0 && (
-        <div className="text-center py-12">
-          <div className="text-white/60">No ideas found matching your search.</div>
+      {error && (
+        <div className="rounded-xl bg-red-500/10 border border-red-500/20 p-4">
+          <p className="text-red-400 text-sm">{error}</p>
         </div>
       )}
 
-      {/* Post/Edit Idea Modal */}
+      {isLoading ? (
+        <div className="flex items-center justify-center py-12">
+          <Loader2 className="h-8 w-8 animate-spin text-white/60" />
+        </div>
+      ) : (
+        <>
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {filtered.map((idea) => (
+              <IdeaCard key={idea.id} idea={idea} />
+            ))}
+          </div>
+
+          {filtered.length === 0 && (
+            <div className="text-center py-12">
+              <div className="text-white/60">No ideas found matching your search.</div>
+            </div>
+          )}
+        </>
+      )}
+
       <PostIdeaModal
         isOpen={isModalOpen}
         onClose={handleCloseModal}

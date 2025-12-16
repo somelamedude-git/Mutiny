@@ -18,7 +18,6 @@ import {
 import { Home, Search, Coins, MessageSquareText, UserRound, Settings, ChevronDown } from "lucide-react"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { SidebarMenuAction } from "@/components/ui/sidebar"
-import { Button } from "@/components/ui/button"
 import { LogoSquare } from "./LogoSquare"
 
 const NAV = [
